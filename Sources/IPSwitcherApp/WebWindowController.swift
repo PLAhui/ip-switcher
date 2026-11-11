@@ -58,20 +58,35 @@ final class WebWindowController: NSWindowController, NSWindowDelegate,
         pushState()
     }
 
-    private func loadPage() {
-        var url = Bundle.main.url(forResource: "index", withExtension: "html",
-                                  subdirectory: "web")
-        if url == nil {
-            // 直接运行裸可执行文件时的兜底：相对 MacOS/ 找 Resources/web。
-            let candidate = Bundle.main.executableURL?
-                .appendingPathComponent("../Resources/web/index.html")
-                .standardizedFileURL
-            if let candidate,
-               FileManager.default.fileExists(atPath: candidate.path) {
-                url = candidate
-            }
+    /// 定位前端入口：优先 App 包内资源；直接跑编译产物（swift run / .build/debug）时
+    /// 回退到源码树的 Resources/web，保证开发态也能正常渲染。
+    private func locatePage() -> URL? {
+        if let url = Bundle.main.url(forResource: "index", withExtension: "html",
+                                     subdirectory: "web") {
+            return url
         }
-        guard let page = url else {
+        var candidates: [URL] = []
+        if let root = ProcessInfo.processInfo.environment["IPSW_WEB_ROOT"],
+           !root.isEmpty {
+            candidates.append(URL(fileURLWithPath: root).appendingPathComponent("index.html"))
+        }
+        if let executable = Bundle.main.executableURL {
+            let base = executable.deletingLastPathComponent()
+            // 已组装 .app：MacOS/../Resources/web
+            candidates.append(base.appendingPathComponent("../Resources/web/index.html")
+                .standardizedFileURL)
+            // 源码直跑：.build/debug/../../Resources/web
+            candidates.append(base.appendingPathComponent("../../Resources/web/index.html")
+                .standardizedFileURL)
+        }
+        // 从仓库根目录运行
+        candidates.append(URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent("Resources/web/index.html"))
+        return candidates.first { FileManager.default.fileExists(atPath: $0.path) }
+    }
+
+    private func loadPage() {
+        guard let page = locatePage() else {
             IPSLog.write("界面资源缺失：找不到 Resources/web/index.html")
             webView.loadHTMLString(
                 "<body style='font-family:-apple-system;padding:40px'>界面资源缺失，请重新运行 ./build.sh</body>",

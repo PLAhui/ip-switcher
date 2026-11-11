@@ -6,6 +6,11 @@ A macOS network interface IP switcher. Save multiple presets per NIC (static IP 
 
 Built for developers and sysadmins who constantly move between networks: office LAN, data center, lab bench, internal debugging.
 
+## Documentation
+
+- [Development guide](docs/DEVELOPMENT.md) (Chinese): environment setup, debugging, code structure, self-test hooks and logs
+- [Build & release](docs/RELEASE.md) (Chinese): release builds, signing & notarization, DMG packaging, end-user installation
+
 ## Features
 
 - **One-click switching** — Multiple presets per interface; the active preset is marked with ✓ automatically
@@ -34,6 +39,14 @@ cd ip-switcher
 ```
 
 The script generates the initial config (first run only), compiles in release mode, assembles `IPSwitcher.app`, bundles the web assets and ad-hoc signs the app.
+
+For distribution, build a universal binary with an explicit version:
+
+```bash
+UNIVERSAL=1 VERSION=1.0.0 ./build.sh   # arm64 + x86_64
+```
+
+See [Build & release](docs/RELEASE.md) for signing, notarization and DMG packaging.
 
 Artifacts:
 
@@ -102,6 +115,9 @@ Logs: `~/Library/Logs/IPSwitcher/ipswitcher.log`.
 │   ├── Info.plist
 │   └── web/index.html         # Front end (plain HTML/CSS/JS, Tauri-compatible)
 ├── build.sh                   # One-shot build script
+├── docs/
+│   ├── DEVELOPMENT.md         # Development guide (Chinese)
+│   └── RELEASE.md             # Build, release & install (Chinese)
 ├── LICENSE
 └── README.md / README.en.md
 ```

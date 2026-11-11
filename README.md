@@ -6,6 +6,11 @@
 
 适合需要在多个网络环境（办公网、机房、实验室、内网调试）之间频繁切换 IP 的开发者与运维人员。
 
+## 文档
+
+- [开发指南](docs/DEVELOPMENT.md)：环境准备、调试运行、代码结构、自检与日志
+- [发布与安装](docs/RELEASE.md)：构建发布包、签名与公证、DMG 打包、他人如何安装
+
 ## 功能
 
 - **方案切换**：每张网卡可保存多套预设方案，点击即应用，当前生效的方案自动打 ✓
@@ -34,6 +39,14 @@ cd ip-switcher
 ```
 
 脚本会依次完成：生成默认配置（仅首次）→ Release 编译 → 组装 `IPSwitcher.app` → 打包 Web 资源 → ad-hoc 签名。
+
+分发用的通用二进制与版本号：
+
+```bash
+UNIVERSAL=1 VERSION=1.0.0 ./build.sh   # 同时支持 Apple Silicon 与 Intel
+```
+
+签名、公证、DMG 打包见 [发布与安装](docs/RELEASE.md)。
 
 构建产物：
 
@@ -102,6 +115,9 @@ cd ip-switcher
 │   ├── Info.plist
 │   └── web/index.html         # 前端（纯 HTML/CSS/JS，与 Tauri 通用）
 ├── build.sh                   # 一键构建脚本
+├── docs/
+│   ├── DEVELOPMENT.md         # 开发指南
+│   └── RELEASE.md             # 发布与安装
 ├── LICENSE
 └── README.md / README.en.md
 ```

@@ -3,8 +3,9 @@
 *.xcodeproj
 *.xcuserdata
 
-# 本地构建的 App 包
+# 本地构建的 App 包与分发产物
 *.app
+dist/
 
 # 本机生成的个人配置（含真实内网 IP，切勿提交）
 profiles.json
