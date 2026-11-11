@@ -6,6 +6,25 @@
 
 适合需要在多个网络环境（办公网、机房、实验室、内网调试）之间频繁切换 IP 的开发者与运维人员。
 
+## 快速上手（TL;DR）
+
+**改了代码后怎么启动：**
+
+```bash
+cd ip-switcher
+swift build --disable-sandbox -c debug
+.build/debug/IPSwitcher        # 开发调试，关窗口即退出，改完重跑即可
+```
+
+要打包成正式 App 则运行 `./build.sh`，然后双击 `IPSwitcher.app`。
+
+**怎么安装使用：**
+
+- 自己用：`./build.sh` 构建后，双击 `IPSwitcher.app` 即可，无任何安装步骤（放「应用程序」文件夹更整洁）
+- 给别人用：把 `IPSwitcher.app` 压缩成 zip 发给对方；对方解压后**右键 → 打开**放行一次（ad-hoc 签名首次会被 Gatekeeper 拦），之后正常双击。若仍打不开，执行 `xattr -dr com.apple.quarantine /Applications/IPSwitcher.app`
+
+更多细节见下文与 [文档](#文档)。
+
 ## 文档
 
 - [开发指南](docs/DEVELOPMENT.md)：环境准备、调试运行、代码结构、自检与日志

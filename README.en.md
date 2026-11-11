@@ -6,6 +6,25 @@ A macOS network interface IP switcher. Save multiple presets per NIC (static IP 
 
 Built for developers and sysadmins who constantly move between networks: office LAN, data center, lab bench, internal debugging.
 
+## Quick start (TL;DR)
+
+**After changing code, run it like this:**
+
+```bash
+cd ip-switcher
+swift build --disable-sandbox -c debug
+.build/debug/IPSwitcher        # dev run; quits when the window closes; just re-run after changes
+```
+
+To build the packaged app instead, run `./build.sh` and double-click `IPSwitcher.app`.
+
+**How to install & use:**
+
+- For yourself: after `./build.sh`, just double-click `IPSwitcher.app` — no install step (dropping it in /Applications keeps things tidy)
+- For others: zip up `IPSwitcher.app` and send it. The recipient right-clicks → Open once to get past Gatekeeper (ad-hoc signing), then uses it normally. If it still won't open: `xattr -dr com.apple.quarantine /Applications/IPSwitcher.app`
+
+Details below and in the [documentation](#documentation).
+
 ## Documentation
 
 - [Development guide](docs/DEVELOPMENT.md) (Chinese): environment setup, debugging, code structure, self-test hooks and logs
