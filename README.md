@@ -6,6 +6,14 @@
 
 适合需要在多个网络环境（办公网、机房、实验室、内网调试）之间频繁切换 IP 的开发者与运维人员。
 
+## 界面预览
+
+| 网卡与方案 | 流量监控 |
+|---|---|
+| ![网卡与方案](docs/images/nics.png) | ![流量监控](docs/images/traffic.png) |
+| **网络位置** | **新增方案** |
+| ![网络位置](docs/images/locations.png) | ![新增方案](docs/images/modal.png) |
+
 ## 快速上手（TL;DR）
 
 **改了代码后怎么启动：**

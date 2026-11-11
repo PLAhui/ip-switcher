@@ -12,6 +12,8 @@ final class WebWindowController: NSWindowController, NSWindowDelegate,
     private var lastMessage = ""
     private var didSelfTest = false
     private var sampler: TrafficSampler?
+    /// 演示模式（IPSW_DEMO=1）：渲染前端内置的虚构数据，供文档截图使用。
+    private let demoMode = ProcessInfo.processInfo.environment["IPSW_DEMO"] == "1"
 
     init() {
         let window = NSWindow(
@@ -53,6 +55,10 @@ final class WebWindowController: NSWindowController, NSWindowDelegate,
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         // 页面就绪后再开始采样，避免首帧推给一个还没定义 __ipswTraffic 的文档。
+        if demoMode {
+            pushState()
+            return
+        }
         let devices = (try? ServiceResolver.list().map { $0.device }) ?? []
         sampler?.start(devices: devices)
         pushState()
@@ -104,10 +110,28 @@ final class WebWindowController: NSWindowController, NSWindowDelegate,
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
         if !window.isVisible { window.center() }
+        applyShotFrameIfNeeded(window)
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
         IPSLog.write("主界面已打开（WebView）")
         pushState()
+    }
+
+    /// 截图取景模式：IPSW_SHOT=1 时把窗口固定到屏幕左上角已知位置与尺寸，
+    /// 便于用 `screencapture -R x,y,w,h` 精确截取窗口区域（仅供文档截图使用）。
+    private func applyShotFrameIfNeeded(_ window: NSWindow) {
+        guard ProcessInfo.processInfo.environment["IPSW_SHOT"] == "1",
+              let screen = window.screen ?? NSScreen.main else { return }
+        let width: CGFloat = 960
+        let height: CGFloat = 600
+        let topInset: CGFloat = 80
+        let originX: CGFloat = 60
+        // 以屏幕左上角为基准换算 AppKit 的左下角坐标
+        let topY = screen.frame.maxY - topInset
+        window.setFrame(NSRect(x: originX, y: topY - height,
+                               width: width, height: height),
+                        display: true)
+        IPSLog.write("SHOT 取景：屏幕 \(screen.frame) → 窗口 \(window.frame)")
     }
 
     func refresh() { pushState() }
@@ -130,6 +154,13 @@ final class WebWindowController: NSWindowController, NSWindowDelegate,
     }
 
     private func pushState(message: String? = nil) {
+        if demoMode {
+            // 渲染前端内置演示数据（虚构 IP 与位置名），文档截图专用。
+            evaluate("window.__ipswRender(DEMO);" +
+                     "window.__ipswTraffic && window.__ipswTraffic(DEMO_TRAFFIC);")
+            applySelfTest()
+            return
+        }
         let msg = message ?? lastMessage
         let isBusy = busy
         DispatchQueue.global(qos: .utility).async {

@@ -6,6 +6,14 @@ A macOS network interface IP switcher. Save multiple presets per NIC (static IP 
 
 Built for developers and sysadmins who constantly move between networks: office LAN, data center, lab bench, internal debugging.
 
+## Screenshots
+
+| Interfaces & presets | Traffic monitor |
+|---|---|
+| ![Interfaces & presets](docs/images/nics.png) | ![Traffic monitor](docs/images/traffic.png) |
+| **Network locations** | **New preset** |
+| ![Network locations](docs/images/locations.png) | ![New preset](docs/images/modal.png) |
+
 ## Quick start (TL;DR)
 
 **After changing code, run it like this:**

@@ -883,7 +883,7 @@ function planModal(edit) {
       <button class="btn btn-icon modal-close" data-close>${icon('i-x','icon icon-sm')}</button>
     </div>
     <div class="modal-body">
-      <div class="field"><label>方案名称</label><input type="text" id="fName" placeholder="例如 机房调试 · 10.111.191.1" value="${esc(nameVal)}"></div>
+      <div class="field"><label>方案名称</label><input type="text" id="fName" placeholder="例如 实验室 · 10.20.30.40" value="${esc(nameVal)}"></div>
       <div class="field"><label>获取方式</label>
         <div class="segmented">
           <button data-act="segment" data-mode="manual" class="${modalMode === 'manual' ? 'on' : ''}">静态 IP</button>
@@ -891,11 +891,11 @@ function planModal(edit) {
         </div>
       </div>
       <div id="manualFields">
-        <div class="field"><label>IP 地址</label><input type="text" id="fIP" placeholder="例如 10.111.191.1" value="${esc(ipVal)}"></div>
+        <div class="field"><label>IP 地址</label><input type="text" id="fIP" placeholder="例如 10.20.30.40" value="${esc(ipVal)}"></div>
         <div class="hint hint-warn" id="nameMismatch" style="display:none;margin:-6px 0 12px"></div>
         <div class="field-row">
           <div class="field"><label>子网掩码</label><input type="text" id="fMask" value="${esc(maskVal)}"></div>
-          <div class="field"><label>网关（可留空）</label><input type="text" id="fRouter" placeholder="例如 10.111.191.254" value="${esc(routerVal)}"></div>
+          <div class="field"><label>网关（可留空）</label><input type="text" id="fRouter" placeholder="例如 10.20.30.1" value="${esc(routerVal)}"></div>
         </div>
         <div class="field"><label>DNS（可留空，多个用逗号分隔）</label><input type="text" id="fDNS" placeholder="例如 223.5.5.5, 114.114.114.114" value="${esc(dnsVal)}"></div>
       </div>
@@ -976,36 +976,35 @@ function submitLoc() {
 }
 
 const DEMO = {
-  location: '个人', activeProfileID: 'plan-en6-10-111-191-1', busy: false,
-  message: '就绪 · 所有数据来自本机真实配置',
+  location: '家庭', activeProfileID: 'plan-en6-10-20-30-40', busy: false,
+  message: '就绪 · 演示数据',
   nics: [
-    { device:'en0', name:'Wi-Fi', mode:'dhcp', liveIP:'192.168.66.5', dns:['223.5.5.5'], currentProfileID:'preset-en0-dhcp', currentProfileName:'Wi-Fi · DHCP 自动获取 · DNS 223.5.5.5' },
-    { device:'en7', name:'USB 10/100 LAN', mode:'manual', liveIP:'192.168.1.88', dns:['223.6.6.6'], currentProfileID:'preset-en7-192-168-1-88', currentProfileName:'USB 10/100 LAN · 192.168.1.88 · DNS 223.6.6.6' },
-    { device:'en6', name:'AX88179A', mode:'manual', liveIP:'10.111.191.1', dns:[], currentProfileID:'plan-en6-10-111-191-1', currentProfileName:'AX88179A · 10.111.191.1' },
+    { device:'en0', name:'Wi-Fi', mode:'dhcp', liveIP:'192.168.1.23', dns:['223.5.5.5'], currentProfileID:'preset-en0-dhcp', currentProfileName:'Wi-Fi · DHCP 自动获取 · DNS 223.5.5.5' },
+    { device:'en7', name:'USB 10G LAN', mode:'manual', liveIP:'192.168.1.20', dns:['1.1.1.1'], currentProfileID:'preset-en7-192-168-1-20', currentProfileName:'USB 10G LAN · 192.168.1.20 · DNS 1.1.1.1' },
+    { device:'en6', name:'有线网卡', mode:'manual', liveIP:'10.20.30.40', dns:[], currentProfileID:'plan-en6-10-20-30-40', currentProfileName:'有线网卡 · 10.20.30.40' },
     { device:'en8', name:'iPhone USB', mode:'dhcp', liveIP:'未分配', dns:[], currentProfileID:'preset-en8-dhcp', currentProfileName:'iPhone USB · DHCP 自动获取' }
   ],
   profiles: [
     { id:'preset-en0-dhcp', name:'Wi-Fi · DHCP 自动获取 · DNS 223.5.5.5', nic:'Wi-Fi', device:'en0', mode:'dhcp', ip:'', mask:'', router:'', dns:['223.5.5.5'], detail:'DHCP 自动获取 · DNS 223.5.5.5', isCurrent:true, connected:true },
-    { id:'preset-en7-dhcp', name:'USB 10/100 LAN · DHCP 自动获取', nic:'USB 10/100 LAN', device:'en7', mode:'dhcp', ip:'', mask:'', router:'', dns:[], detail:'DHCP 自动获取', isCurrent:false, connected:true },
-    { id:'preset-en7-192-168-1-88', name:'USB 10/100 LAN · 192.168.1.88 · DNS 223.6.6.6', nic:'USB 10/100 LAN', device:'en7', mode:'manual', ip:'192.168.1.88', mask:'255.255.255.0', router:'', dns:['223.6.6.6'], detail:'静态 192.168.1.88 / 255.255.255.0 · DNS 223.6.6.6', isCurrent:true, connected:true },
-    { id:'preset-en6-dhcp', name:'AX88179A · DHCP 自动获取', nic:'AX88179A', device:'en6', mode:'dhcp', ip:'', mask:'', router:'', dns:[], detail:'DHCP 自动获取', isCurrent:false, connected:true },
-    { id:'preset-en6-172-26-11-1', name:'AX88179A · 172.26.11.1', nic:'AX88179A', device:'en6', mode:'manual', ip:'172.26.11.1', mask:'255.255.255.0', router:'172.26.11.1', dns:[], detail:'静态 172.26.11.1 / 255.255.255.0 · 网关 172.26.11.1', isCurrent:false, connected:true },
+    { id:'preset-en7-dhcp', name:'USB 10G LAN · DHCP 自动获取', nic:'USB 10G LAN', device:'en7', mode:'dhcp', ip:'', mask:'', router:'', dns:[], detail:'DHCP 自动获取', isCurrent:false, connected:true },
+    { id:'preset-en7-192-168-1-20', name:'USB 10G LAN · 192.168.1.20 · DNS 1.1.1.1', nic:'USB 10G LAN', device:'en7', mode:'manual', ip:'192.168.1.20', mask:'255.255.255.0', router:'', dns:['1.1.1.1'], detail:'静态 192.168.1.20 / 255.255.255.0 · DNS 1.1.1.1', isCurrent:true, connected:true },
+    { id:'preset-en6-dhcp', name:'有线网卡 · DHCP 自动获取', nic:'有线网卡', device:'en6', mode:'dhcp', ip:'', mask:'', router:'', dns:[], detail:'DHCP 自动获取', isCurrent:false, connected:true },
     { id:'preset-en8-dhcp', name:'iPhone USB · DHCP 自动获取', nic:'iPhone USB', device:'en8', mode:'dhcp', ip:'', mask:'', router:'', dns:[], detail:'DHCP 自动获取', isCurrent:true, connected:true },
-    { id:'plan-en6-10-111-191-1', name:'AX88179A · 10.111.191.1', nic:'AX88179A', device:'en6', mode:'manual', ip:'10.111.191.1', mask:'255.255.255.0', router:'', dns:[], detail:'静态 10.111.191.1 / 255.255.255.0', isCurrent:true, connected:true }
+    { id:'plan-en6-10-20-30-40', name:'实验室 · 10.20.30.40', nic:'有线网卡', device:'en6', mode:'manual', ip:'10.20.30.40', mask:'255.255.255.0', router:'10.20.30.1', dns:[], detail:'静态 10.20.30.40 / 255.255.255.0 · 网关 10.20.30.1', isCurrent:true, connected:true }
   ],
   locations: [
-    { name:'个人', isCurrent:true, summary:'5 项服务 · 2 个静态 IP · 11 条静态路由 · 代理开启', services:[
+    { name:'家庭', isCurrent:true, summary:'5 项服务 · 2 个静态 IP · 3 条静态路由 · 代理开启', services:[
       { title:'Wi-Fi (en0)', detail:'DHCP 自动获取 · DNS 223.5.5.5 · 代理开启' },
-      { title:'USB 10/100 LAN (en7)', detail:'静态 192.168.1.88 / 255.255.255.0 · DNS 223.6.6.6 · 5 条静态路由 · 代理开启' },
-      { title:'AX88179A (en6)', detail:'静态 10.111.191.1 / 255.255.255.0 · 网关 172.26.11.1 · 6 条静态路由 · 代理开启' },
+      { title:'USB 10G LAN (en7)', detail:'静态 192.168.1.20 / 255.255.255.0 · DNS 1.1.1.1 · 3 条静态路由 · 代理开启' },
+      { title:'有线网卡 (en6)', detail:'静态 10.20.30.40 / 255.255.255.0 · 网关 10.20.30.1 · 4 条静态路由 · 代理开启' },
       { title:'iPhone USB (en8)', detail:'DHCP 自动获取 · 代理开启' } ] },
-    { name:'大唐中南院', isCurrent:false, summary:'3 项服务 · 0 个静态 IP', services:[
-      { title:'以太网适配器(en4) (en4)', detail:'DHCP 自动获取' },
+    { name:'办公网络', isCurrent:false, summary:'3 项服务 · 0 个静态 IP', services:[
+      { title:'以太网适配器 (en4)', detail:'DHCP 自动获取' },
       { title:'雷雳网桥 (bridge0)', detail:'DHCP 自动获取' },
       { title:'Wi-Fi (en0)', detail:'DHCP 自动获取' } ] },
-    { name:'甘肃集控', isCurrent:false, summary:'4 项服务 · 0 个静态 IP', services:[
-      { title:'以太网转换器(en3) (en3)', detail:'DHCP 自动获取' },
-      { title:'以太网转换器(en4) (en4)', detail:'DHCP 自动获取' },
+    { name:'机房调试', isCurrent:false, summary:'4 项服务 · 0 个静态 IP', services:[
+      { title:'以太网转换器 (en3)', detail:'DHCP 自动获取' },
+      { title:'以太网转换器 (en4)', detail:'DHCP 自动获取' },
       { title:'雷雳网桥 (bridge0)', detail:'DHCP 自动获取' },
       { title:'Wi-Fi (en0)', detail:'DHCP 自动获取 · DNS 223.5.5.5' } ] }
   ]
