@@ -7,17 +7,23 @@
   <key>CFBundleDisplayName</key>
   <string>IP Switcher</string>
   <key>CFBundleIdentifier</key>
-  <string>local.ipswitcher.menu</string>
+  <string>io.github.plahui.ip-switcher</string>
   <key>CFBundleExecutable</key>
   <string>IPSwitcher</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.0</string>
+  <string>1.0.0</string>
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>LSMinimumSystemVersion</key>
   <string>13.0</string>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.utilities</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright © 2026 PLAhui. MIT License.</string>
   <key>NSHighResolutionCapable</key>
   <true/>
   <key>CFBundleDevelopmentRegion</key>
