@@ -1,4 +1,6 @@
-# IP Switcher
+# ip-switcher
+
+[English](README.en.md) | 简体中文
 
 一个 macOS 网卡 IP 切换工具：为每张网卡保存多套预设方案（静态 IP / DHCP），一键切换、新增、编辑，并附带实时流量监控。
 
@@ -26,6 +28,8 @@
 要求：macOS 13+、Swift 5.9+（Xcode 或 Swift 工具链）。
 
 ```bash
+git clone https://github.com/PLAhui/ip-switcher.git
+cd ip-switcher
 ./build.sh
 ```
 
@@ -51,23 +55,44 @@
 ## 命令行工具 ipswctl
 
 ```bash
-.build/release/ipswctl list           # 列出全部预设
-.build/release/ipswctl state          # 当前网卡状态与方案匹配情况
+.build/release/ipswctl list              # 列出全部预设
+.build/release/ipswctl state             # 当前网卡状态与方案匹配情况
 .build/release/ipswctl preview <方案ID>   # 预演将要执行的命令（不实际执行）
 .build/release/ipswctl script <方案ID>    # 导出提权脚本
 .build/release/ipswctl apply <方案ID>     # 应用方案
-.build/release/ipswctl locations      # 系统网络位置列表
+.build/release/ipswctl locations         # 系统网络位置列表
 ```
 
 ## 配置文件
 
-预设方案保存在 `~/Library/Application Support/IPSwitcher/profiles.json`，首次构建时由 `ipswctl init-config` 根据当前系统自动生成，格式见仓库内 `profiles.json` 的说明（不入库，避免泄漏个人网络信息）。
+预设方案保存在 `~/Library/Application Support/IPSwitcher/profiles.json`。
+
+该文件由首次构建时的 `ipswctl init-config` 根据当前系统的网卡与网络位置自动生成，**不入库**（避免泄漏个人网络信息）。核心结构：
+
+```jsonc
+{
+  "profiles": [
+    {
+      "id": "plan-en0-192-168-1-50",
+      "name": "办公网",
+      "services": [{
+        "match": { "device": "en0", "serviceName": "Wi-Fi" },
+        "ipv4": { "mode": "manual", "ip": "192.168.1.50",
+                  "mask": "255.255.255.0", "router": "192.168.1.1" },
+        "dns": { "servers": ["223.5.5.5"] }
+      }],
+      "verify": { "pingGateway": false, "rollbackOnFail": true, "timeoutSec": 5 }
+    }
+  ]
+}
+```
 
 应用日志位于 `~/Library/Logs/IPSwitcher/ipswitcher.log`。
 
 ## 项目结构
 
 ```
+.
 ├── Package.swift              # SwiftPM：三个 target
 ├── Sources/
 │   ├── IPSwitcherCore/        # 核心逻辑：模型、networksetup 封装、提权执行、回滚、位置迁移
@@ -76,7 +101,9 @@
 ├── Resources/
 │   ├── Info.plist
 │   └── web/index.html         # 前端（纯 HTML/CSS/JS，与 Tauri 通用）
-└── build.sh                   # 一键构建脚本
+├── build.sh                   # 一键构建脚本
+├── LICENSE
+└── README.md / README.en.md
 ```
 
 架构要点：

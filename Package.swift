@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "IPSwitcher",
+    name: "ip-switcher",
     platforms: [.macOS(.v13)],
     products: [
         .library(name: "IPSwitcherCore", targets: ["IPSwitcherCore"]),
