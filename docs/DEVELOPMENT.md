@@ -60,6 +60,32 @@ IPSW_WEB_ROOT=/path/to/web .build/debug/IPSwitcher
 
 只有 `apply` 会真正修改系统配置，测试时请确认目标网卡与预设内容一致。
 
+### 运行模式：真实 / 演示
+
+应用有两种运行模式：
+
+| 模式 | 数据来源 | 写操作 | 启动方式 |
+|---|---|---|---|
+| **真实模式**（默认） | 本机真实网卡与配置 | 允许（走授权流程） | `open IPSwitcher.app` |
+| **演示模式** | 前端内置虚构示例数据 | **全部拦截**，界面顶部显示「演示模式 · 只读」角标 | 见下 |
+
+进入演示模式的三种方式（任选其一）：
+
+```bash
+./demo.sh                                        # 快捷脚本（推荐）
+IPSWitcher.app/Contents/MacOS/IPSwitcher --demo  # 裸跑可执行文件，带 --demo 参数
+IPSW_DEMO=1 IPSwitcher.app/Contents/MacOS/IPSwitcher   # 环境变量方式
+```
+
+另外，直接用浏览器打开 `Resources/web/index.html`（无原生桥）也会自动渲染演示数据，便于纯前端调试样式。
+
+注意：macOS 的 `open --args --demo` 在本机实测**不会**把参数传进应用（argv 只有进程路径），所以演示模式不要通过 `open --args` 进入。
+
+演示模式的安全设计：
+
+- 前端 `DEMO` 数据中的设备名（如 `en0`）与真机可能重名，因此 Swift 层对 `apply` / `dhcp` / `rollback` / `saveProfile` / `deleteProfile` / 位置切换等所有写操作做了硬拦截，并弹 toast 提示。
+- 自检钩子 `web-demo-guard` 专用于验证该拦截：演示模式下它模拟一次「恢复 DHCP」请求，日志应出现「演示模式：已拦截动作 dhcp」。该钩子带 `where demoMode` 保护，非演示模式下绝不会执行。
+
 ### 无人值守界面自检
 
 通过环境变量驱动界面跳到指定状态，便于配合 `screencapture` 截图核对：
@@ -77,6 +103,7 @@ IPSW_SELFTEST=web-traffic .build/debug/IPSwitcher
 | `web-modal` | 打开「新增方案」弹窗 |
 | `web-edit-static` | 打开某张静态 IP 方案的编辑弹窗 |
 | `web-close` | 关闭窗口（用于验证「关窗口即退出」） |
+| `web-demo-guard` | 演示模式下模拟写操作（验证只读拦截生效） |
 
 注意：`open --env` 给 `.app` 传环境变量并不可靠，自检请直接运行裸可执行文件。
 

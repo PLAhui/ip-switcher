@@ -26,6 +26,12 @@ swift build --disable-sandbox -c debug
 
 To build the packaged app instead, run `./build.sh` and double-click `IPSwitcher.app`.
 
+**Demo mode (fictional sample data, read-only):**
+
+```bash
+./demo.sh        # renders built-in demo data; all mutating actions are blocked
+```
+
 **How to install & use:**
 
 - For yourself: after `./build.sh`, just double-click `IPSwitcher.app` — no install step (dropping it in /Applications keeps things tidy)
@@ -142,6 +148,7 @@ Logs: `~/Library/Logs/IPSwitcher/ipswitcher.log`.
 │   ├── Info.plist
 │   └── web/index.html         # Front end (plain HTML/CSS/JS, Tauri-compatible)
 ├── build.sh                   # One-shot build script
+├── demo.sh                    # Launch in demo mode (fictional data, read-only)
 ├── docs/
 │   ├── DEVELOPMENT.md         # Development guide (Chinese)
 │   └── RELEASE.md             # Build, release & install (Chinese)

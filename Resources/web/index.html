@@ -344,6 +344,7 @@ svg { display: block; }
 .toast-icon .icon { width: 13px; height: 13px; stroke-width: 2; }
 .toast.success .toast-icon { background: var(--success-soft); color: var(--success); }
 .toast.error .toast-icon { background: var(--danger-soft); color: var(--danger); }
+.toast.warning .toast-icon { background: var(--warning-soft); color: var(--warning); }
 .toast.info .toast-icon { background: var(--accent-soft); color: var(--accent); }
 .toast-title { font-size: 12px; font-weight: 620; }
 .toast-msg { font-size: 11px; color: var(--text-2); line-height: 1.5; margin-top: 3px; }
@@ -406,6 +407,7 @@ svg { display: block; }
     <div class="topbar">
       <div><h1 id="pageTitle">网卡与方案</h1><p id="pageDesc">选择一张网卡，查看并切换它的 IP 配置方案</p></div>
       <div class="top-actions">
+        <span class="badge badge-warning" id="demoBadge" style="display:none" title="当前为虚构示例数据，所有写操作已被禁用">演示模式 · 只读</span>
         <button class="btn btn-ghost" id="pwlessBtn" data-act="togglePasswordless"><svg class="icon icon-sm"><use href="#i-shield"/></svg><span id="pwlessText">免密切换</span></button>
         <button class="btn btn-ghost" data-act="rollback"><svg class="icon icon-sm"><use href="#i-shield"/></svg>恢复快照</button>
         <button class="btn btn-secondary" data-act="refresh"><svg class="icon icon-sm"><use href="#i-refresh"/></svg>刷新</button>
@@ -750,6 +752,8 @@ function render() {
     selectedLocation = cur ? cur.name : null;
   }
   renderSidebar();
+  const demoBadge = document.getElementById('demoBadge');
+  if (demoBadge) demoBadge.style.display = S.demo ? '' : 'none';
   const pwBtn = document.getElementById('pwlessBtn');
   if (pwBtn) {
     const on = !!S.passwordless;
@@ -976,6 +980,7 @@ function submitLoc() {
 }
 
 const DEMO = {
+  demo: true,
   location: '家庭', activeProfileID: 'plan-en6-10-20-30-40', busy: false,
   message: '就绪 · 演示数据',
   nics: [

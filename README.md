@@ -26,6 +26,12 @@ swift build --disable-sandbox -c debug
 
 要打包成正式 App 则运行 `./build.sh`，然后双击 `IPSwitcher.app`。
 
+**演示模式（不碰真实配置，只看效果）：**
+
+```bash
+./demo.sh        # 渲染内置虚构示例数据，所有写操作被拦截，关窗口退出
+```
+
 **怎么安装使用：**
 
 - 自己用：`./build.sh` 构建后，双击 `IPSwitcher.app` 即可，无任何安装步骤（放「应用程序」文件夹更整洁）
@@ -144,6 +150,7 @@ UNIVERSAL=1 VERSION=1.0.0 ./build.sh   # 同时支持 Apple Silicon 与 Intel
 │   ├── Info.plist
 │   └── web/index.html         # 前端（纯 HTML/CSS/JS，与 Tauri 通用）
 ├── build.sh                   # 一键构建脚本
+├── demo.sh                    # 演示模式启动（虚构数据、只读）
 ├── docs/
 │   ├── DEVELOPMENT.md         # 开发指南
 │   └── RELEASE.md             # 发布与安装

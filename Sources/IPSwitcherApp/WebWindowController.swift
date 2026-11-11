@@ -12,8 +12,19 @@ final class WebWindowController: NSWindowController, NSWindowDelegate,
     private var lastMessage = ""
     private var didSelfTest = false
     private var sampler: TrafficSampler?
-    /// 演示模式（IPSW_DEMO=1）：渲染前端内置的虚构数据，供文档截图使用。
+    /// 演示模式：渲染前端内置的虚构数据，只读、不触碰任何真实配置。
+    /// 开启方式二选一：环境变量 `IPSW_DEMO=1`，或启动参数 `--demo`
+    /// （后者可直接 `open IPSwitcher.app --args --demo`，无需裸跑可执行文件）。
     private let demoMode = ProcessInfo.processInfo.environment["IPSW_DEMO"] == "1"
+        || CommandLine.arguments.contains("--demo")
+
+    /// 演示模式下禁止执行的动作：这些都是写系统配置或改配置文件的。
+    /// 演示数据里的设备名（en0 等）与真机重名，若不拦截，"恢复 DHCP" 会真的改掉真网卡。
+    private static let mutatingActions: Set<String> = [
+        "apply", "dhcp", "rollback", "saveProfile", "deleteProfile",
+        "switchLocation", "createLocation", "deleteLocation", "importLocation",
+        "enablePasswordless", "disablePasswordless"
+    ]
 
     init() {
         let window = NSWindow(
@@ -30,6 +41,7 @@ final class WebWindowController: NSWindowController, NSWindowDelegate,
         window.isReleasedWhenClosed = false
         super.init(window: window)
         window.delegate = self
+        if demoMode { IPSLog.write("运行于演示模式（只读预览，写操作将被拦截）") }
         setupWebView(in: window)
     }
 
@@ -155,8 +167,8 @@ final class WebWindowController: NSWindowController, NSWindowDelegate,
 
     private func pushState(message: String? = nil) {
         if demoMode {
-            // 渲染前端内置演示数据（虚构 IP 与位置名），文档截图专用。
-            evaluate("window.__ipswRender(DEMO);" +
+            // 渲染前端内置演示数据（虚构 IP 与位置名），并打上 demo 标记供界面显示角标。
+            evaluate("window.__ipswRender(Object.assign({}, DEMO, {demo:true}));" +
                      "window.__ipswTraffic && window.__ipswTraffic(DEMO_TRAFFIC);")
             applySelfTest()
             return
@@ -206,6 +218,11 @@ final class WebWindowController: NSWindowController, NSWindowDelegate,
             case "web-close":
                 // 等价于用户点窗口红色关闭按钮，验证「关窗口即退出」。
                 self.window?.performClose(nil)
+            case "web-demo-guard" where self.demoMode:
+                // 仅演示模式下有意义：试图写真实网卡，应当被只读保护拦下。
+                // 加 where 条件是为了非演示模式绝不会真的执行这条命令。
+                self.evaluate("window.webkit.messageHandlers.ipsw.postMessage(" +
+                              "{action:'dhcp',device:'en0',nic:'Wi-Fi'})")
             default:
                 break
             }
@@ -301,6 +318,15 @@ final class WebWindowController: NSWindowController, NSWindowDelegate,
         guard let body = message.body as? [String: Any],
               let action = body["action"] as? String else { return }
         IPSLog.write("Web 动作：\(action)")
+
+        // 演示模式是纯只读预览：任何写操作一律拦下，避免用户把演示数据当成真实状态去操作。
+        if demoMode, Self.mutatingActions.contains(action) {
+            IPSLog.write("演示模式：已拦截动作 \(action)")
+            sendToast("warning", "演示模式 · 只读",
+                      "当前显示的是虚构示例数据，不会修改任何真实网络配置。"
+                      + "需要真正切换：退出应用后以正常方式启动（不带 --demo）。")
+            return
+        }
 
         switch action {
         case "ready", "refresh":
