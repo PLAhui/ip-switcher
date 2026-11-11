@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IP Switcher</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f3f5f9;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --border: #e6e9f0;
+  --border-strong: #d9dee8;
+  --text: #171c28;
+  --text-2: #5e6878;
+  --text-3: #98a2b1;
+  --accent: #3b6bf5;
+  --accent-hover: #3159d8;
+  --accent-soft: #eef3ff;
+  --accent-text: #2f58cf;
+  --success: #12996a;
+  --success-soft: #e8f7f0;
+  --danger: #d6473f;
+  --danger-soft: #fdf0ef;
+  --warning: #b7791f;
+  --warning-soft: #fdf6e7;
+  --shadow-sm: 0 1px 2px rgba(19, 27, 45, .04);
+  --shadow-md: 0 2px 6px rgba(19, 27, 45, .05), 0 14px 36px rgba(19, 27, 45, .07);
+  --shadow-lg: 0 24px 70px rgba(15, 23, 42, .20);
+  --radius: 15px;
+  --radius-sm: 10px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #14171d; --surface: #1d2129; --surface-2: #232833;
+    --border: #2c323e; --border-strong: #3a4250;
+    --text: #eef1f6; --text-2: #a3adbc; --text-3: #6f7a8b;
+    --accent: #6b90ff; --accent-hover: #5379f0; --accent-soft: #232f4d;
+    --accent-text: #98b4ff; --success: #4cc79a; --success-soft: #1c3a31;
+    --danger: #f1736a; --danger-soft: #3d2526; --warning: #e0b264;
+    --warning-soft: #3b3020;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.2);
+    --shadow-md: 0 2px 8px rgba(0,0,0,.25), 0 14px 36px rgba(0,0,0,.28);
+    --shadow-lg: 0 24px 70px rgba(0,0,0,.5);
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: var(--font); font-size: 13px; color: var(--text);
+  background: var(--bg); -webkit-font-smoothing: antialiased;
+  overflow: hidden; user-select: none;
+}
+button, input, select { font-family: inherit; font-size: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; }
+button:disabled { opacity: .45; cursor: default; }
+svg { display: block; }
+.icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.icon-sm { width: 14px; height: 14px; }
+.icon-lg { width: 20px; height: 20px; }
+
+#app { display: flex; height: 100vh; }
+.sidebar {
+  width: 238px; flex: none; display: flex; flex-direction: column;
+  padding: 48px 14px 16px; background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 11px; padding: 0 8px 26px; }
+.brand-mark {
+  width: 34px; height: 34px; border-radius: 10px; background: var(--accent);
+  display: grid; place-items: center; color: #fff;
+  box-shadow: 0 4px 12px rgba(59,107,245,.28);
+}
+.brand-mark .icon { width: 19px; height: 19px; stroke-width: 1.9; }
+.brand-name { font-size: 14px; font-weight: 650; letter-spacing: -.2px; }
+.brand-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+.nav { display: flex; flex-direction: column; gap: 3px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 9px 10px; border-radius: var(--radius-sm); color: var(--text-2);
+  font-size: 12.5px; font-weight: 500; text-align: left; position: relative;
+  transition: background .16s ease, color .16s ease;
+}
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+.nav-item.active { background: var(--accent-soft); color: var(--accent-text); font-weight: 600; }
+.nav-item.active::before {
+  content: ""; position: absolute; left: 0; top: 9px; bottom: 9px;
+  width: 3px; border-radius: 3px; background: var(--accent);
+}
+.nav-item .icon { opacity: .85; }
+.nav-count {
+  margin-left: auto; font-size: 11px; font-variant-numeric: tabular-nums;
+  color: var(--text-3); background: var(--surface-2); border: 1px solid var(--border);
+  padding: 1px 7px; border-radius: 20px;
+}
+.nav-item.active .nav-count { background: transparent; border-color: transparent; color: var(--accent-text); }
+
+.side-section { margin-top: 26px; min-height: 0; flex: 1; display: flex; flex-direction: column; }
+.side-label {
+  font-size: 10.5px; font-weight: 650; letter-spacing: .9px; text-transform: uppercase;
+  color: var(--text-3); padding: 0 10px 9px;
+}
+.side-scroll { overflow-y: auto; margin: 0 -4px; padding: 0 4px; }
+.side-nic {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 8px 10px; border-radius: var(--radius-sm); text-align: left;
+  transition: background .16s ease; margin-bottom: 2px;
+}
+.side-nic:hover { background: var(--surface-2); }
+.side-nic.active { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border); }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); flex: none; }
+.dot.on { background: var(--success); box-shadow: 0 0 0 3px var(--success-soft); }
+.side-nic-txt { min-width: 0; flex: 1; }
+.side-nic-name { font-size: 12px; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.side-nic-ip { font-size: 10.5px; color: var(--text-3); margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+.side-foot { border-top: 1px solid var(--border); padding-top: 12px; }
+.location-chip {
+  display: flex; align-items: center; gap: 8px; padding: 9px 10px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 11.5px; color: var(--text-2);
+}
+.location-chip strong { color: var(--text); font-weight: 600; }
+.side-actions { display: flex; gap: 4px; margin-top: 9px; }
+.side-link {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 6px; border-radius: 8px; font-size: 11px; color: var(--text-3);
+  transition: background .16s, color .16s;
+}
+.side-link:hover { background: var(--surface-2); color: var(--text); }
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.topbar {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 20px;
+  padding: 47px 34px 18px; flex: none;
+}
+.topbar h1 { margin: 0; font-size: 21px; font-weight: 650; letter-spacing: -.5px; }
+.topbar p { margin: 5px 0 0; font-size: 12px; color: var(--text-2); }
+.top-actions { display: flex; gap: 8px; align-items: center; }
+.scroll { flex: 1; overflow-y: auto; padding: 0 34px 34px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  height: 34px; padding: 0 14px; border-radius: 9px; font-size: 12.5px;
+  font-weight: 550; transition: all .16s ease; white-space: nowrap;
+  border: 1px solid transparent;
+}
+.btn:not(:disabled):active { transform: scale(.975); }
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 6px rgba(59,107,245,.22); }
+.btn-primary:not(:disabled):hover { background: var(--accent-hover); }
+.btn-secondary { background: var(--surface); border-color: var(--border-strong); color: var(--text); box-shadow: var(--shadow-sm); }
+.btn-secondary:not(:disabled):hover { background: var(--surface-2); border-color: var(--text-3); }
+.btn-ghost { color: var(--text-2); }
+.btn-ghost:not(:disabled):hover { background: var(--surface-2); color: var(--text); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:not(:disabled):hover { filter: brightness(.93); }
+.btn-primary:disabled { background: var(--surface-2); color: var(--text-3); box-shadow: none; border-color: var(--border); }
+.btn-danger:disabled { background: var(--surface-2); color: var(--text-3); }
+.btn-sm { height: 29px; padding: 0 11px; font-size: 11.5px; border-radius: 8px; }
+.btn-icon { width: 30px; height: 30px; padding: 0; border-radius: 8px; color: var(--text-3); }
+.btn-icon:not(:disabled):hover { background: var(--danger-soft); color: var(--danger); }
+.btn-icon.edit:not(:disabled):hover { background: var(--accent-soft); color: var(--accent); }
+.hint-warn { color: var(--warning); }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+}
+.hero {
+  display: flex; align-items: center; gap: 18px; padding: 20px 22px;
+  margin-bottom: 22px; animation: fadeUp .32s ease both;
+}
+.hero-icon {
+  width: 46px; height: 46px; border-radius: 13px; flex: none;
+  background: var(--accent-soft); color: var(--accent); display: grid; place-items: center;
+}
+.hero-icon .icon { width: 23px; height: 23px; }
+.hero-main { flex: 1; min-width: 0; }
+.hero-title { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 620; }
+.hero-device { font-size: 11px; color: var(--text-3); font-weight: 450; }
+.hero-ip { font-size: 23px; font-weight: 620; letter-spacing: -.6px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.hero-ip.muted { color: var(--text-3); font-size: 18px; }
+.hero-meta { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.hero-actions { display: flex; gap: 8px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px;
+  border-radius: 20px; font-size: 10.5px; font-weight: 550;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2);
+}
+.badge-accent { background: var(--accent-soft); border-color: transparent; color: var(--accent-text); }
+.badge-success { background: var(--success-soft); border-color: transparent; color: var(--success); }
+.badge-warning { background: var(--warning-soft); border-color: transparent; color: var(--warning); }
+
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 0 0 12px; gap: 12px;
+}
+.section-title { font-size: 12.5px; font-weight: 620; color: var(--text); }
+.section-title span { color: var(--text-3); font-weight: 450; margin-left: 6px; }
+.section-hint { font-size: 11px; color: var(--text-3); }
+
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.plan {
+  padding: 16px 17px 15px; position: relative; overflow: hidden;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  animation: fadeUp .34s ease both;
+}
+.plan:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border-strong); }
+.plan.current { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-soft), var(--shadow-sm); background: linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 58%); }
+.plan-top { display: flex; align-items: center; gap: 8px; }
+.plan-name { font-size: 12.5px; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.plan-value { font-size: 20px; font-weight: 620; letter-spacing: -.5px; margin: 12px 0 4px; font-variant-numeric: tabular-nums; }
+.plan-value.dim { color: var(--text-3); }
+.plan-detail { font-size: 11px; color: var(--text-2); line-height: 1.55; min-height: 17px; }
+.plan-foot { display: flex; align-items: center; gap: 8px; margin-top: 15px; padding-top: 12px; border-top: 1px solid var(--border); }
+.plan-foot .btn { flex: 1; }
+
+.empty {
+  padding: 46px 22px; text-align: center; border: 1px dashed var(--border-strong);
+  border-radius: var(--radius); background: var(--surface-2);
+}
+.empty-icon { width: 44px; height: 44px; border-radius: 13px; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; margin: 0 auto 14px; color: var(--text-3); }
+.empty h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+.empty p { margin: 0 0 16px; font-size: 11.5px; color: var(--text-2); }
+
+.notice {
+  display: flex; gap: 11px; padding: 13px 15px; border-radius: var(--radius-sm);
+  background: var(--warning-soft); border: 1px solid rgba(183,121,31,.16);
+  color: var(--warning); font-size: 11.5px; line-height: 1.6; margin-bottom: 18px;
+}
+.notice .icon { margin-top: 1px; }
+.notice strong { color: inherit; }
+
+.loc-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 14px; align-items: start; }
+.loc-list { display: flex; flex-direction: column; gap: 8px; }
+.loc-item {
+  padding: 14px 15px; text-align: left; width: 100%; transition: all .18s ease;
+  animation: fadeUp .3s ease both;
+}
+.loc-item:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
+.loc-item.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-soft); }
+.loc-head { display: flex; align-items: center; gap: 8px; }
+.loc-name { font-size: 13px; font-weight: 600; flex: 1; }
+.loc-summary { font-size: 10.5px; color: var(--text-3); margin-top: 7px; line-height: 1.5; }
+.loc-detail { padding: 20px 22px; }
+.loc-detail-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.loc-detail-head .hero-icon { width: 40px; height: 40px; border-radius: 11px; }
+.loc-detail-title { font-size: 16px; font-weight: 620; }
+.loc-detail-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+.svc-row { display: flex; gap: 12px; padding: 11px 0; border-top: 1px solid var(--border); }
+.svc-row:first-of-type { border-top: 0; }
+.svc-name { font-size: 12px; font-weight: 550; width: 190px; flex: none; }
+.svc-detail { font-size: 11px; color: var(--text-2); line-height: 1.55; flex: 1; }
+.loc-actions { display: flex; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+
+.traffic-overview {
+  display: flex; padding: 18px 22px; margin-bottom: 20px;
+  animation: fadeUp .32s ease both;
+}
+.to-stat { flex: 1; padding-left: 20px; border-left: 1px solid var(--border); }
+.to-stat:first-child { padding-left: 0; border-left: 0; }
+.to-stat > span { font-size: 11px; color: var(--text-3); }
+.to-stat strong { display: block; font-size: 20px; font-weight: 620; letter-spacing: -.4px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.traffic-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.traffic-card { padding: 17px 18px 15px; animation: fadeUp .34s ease both; }
+.tc-head { display: flex; align-items: center; gap: 8px; }
+.tc-name { font-size: 12.5px; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tc-rates { display: flex; gap: 26px; margin: 14px 0 8px; }
+.tc-rate strong { font-size: 19px; font-weight: 620; letter-spacing: -.4px; font-variant-numeric: tabular-nums; }
+.tc-rate small { font-size: 10.5px; color: var(--text-3); margin-left: 6px; }
+.tc-arrow { font-size: 12px; margin-right: 5px; }
+.tc-arrow.down { color: var(--accent); }
+.tc-arrow.up { color: var(--success); }
+.tc-chart { width: 100%; height: 96px; display: block; }
+.tc-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 10.5px; color: var(--text-3); }
+.legend { display: flex; gap: 14px; font-size: 10.5px; color: var(--text-3); }
+.legend i { width: 8px; height: 8px; border-radius: 3px; display: inline-block; margin-right: 5px; }
+
+.status-line {
+  display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--text-2);
+  padding: 9px 13px; margin-bottom: 16px; border-radius: var(--radius-sm);
+  background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.status-line .spinner { width: 12px; height: 12px; border: 2px solid var(--border-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+
+.overlay {
+  position: fixed; inset: 0; background: rgba(18,24,36,.34);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center; z-index: 40;
+}
+.overlay.show { display: flex; animation: fadeIn .18s ease; }
+.modal {
+  width: 470px; max-width: calc(100vw - 48px); max-height: calc(100vh - 80px);
+  overflow-y: auto; background: var(--surface); border-radius: 18px;
+  box-shadow: var(--shadow-lg); border: 1px solid var(--border);
+  animation: modalIn .22s cubic-bezier(.2,.8,.2,1) both;
+}
+.modal-head { padding: 22px 24px 4px; display: flex; gap: 13px; align-items: flex-start; }
+.modal-icon {
+  width: 36px; height: 36px; border-radius: 11px; flex: none; display: grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent);
+}
+.modal-icon.danger { background: var(--danger-soft); color: var(--danger); }
+.modal-icon .icon { width: 18px; height: 18px; }
+.modal-head-txt { flex: 1; }
+.modal-title { font-size: 15px; font-weight: 640; letter-spacing: -.2px; }
+.modal-desc { font-size: 11.5px; color: var(--text-2); line-height: 1.6; margin-top: 6px; white-space: pre-line; }
+.modal-close { color: var(--text-3); margin: -4px -6px 0 0; }
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 18px 24px 4px; }
+.modal-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 18px 24px 22px; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 11.5px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+.field input[type=text], .field select {
+  width: 100%; height: 36px; padding: 0 11px; border-radius: 9px;
+  background: var(--surface-2); border: 1px solid var(--border-strong); outline: none;
+  transition: border-color .16s, box-shadow .16s; font-size: 12.5px;
+}
+.field input[type=text]:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); background: var(--surface); }
+.field input::placeholder { color: var(--text-3); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.segmented { display: flex; gap: 3px; padding: 3px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; }
+.segmented button { flex: 1; height: 30px; border-radius: 7px; font-size: 12px; font-weight: 550; color: var(--text-2); transition: all .16s; }
+.segmented button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm), 0 0 0 1px var(--border); }
+.check-row { display: flex; align-items: flex-start; gap: 9px; font-size: 11.5px; color: var(--text-2); line-height: 1.5; cursor: pointer; }
+.check-row input { margin: 2px 0 0; accent-color: var(--accent); }
+.hint { font-size: 10.5px; color: var(--text-3); line-height: 1.55; margin-top: 7px; }
+.error { font-size: 11px; color: var(--danger); margin-top: 8px; display: none; }
+.error.show { display: block; }
+
+.toast-wrap { position: fixed; top: 20px; right: 22px; display: flex; flex-direction: column; gap: 9px; z-index: 60; }
+.toast {
+  width: 310px; display: flex; gap: 11px; padding: 13px 15px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow-md); animation: toastIn .26s cubic-bezier(.2,.8,.2,1) both;
+}
+.toast.out { animation: toastOut .2s ease forwards; }
+.toast-icon { width: 20px; height: 20px; border-radius: 7px; display: grid; place-items: center; flex: none; margin-top: 1px; }
+.toast-icon .icon { width: 13px; height: 13px; stroke-width: 2; }
+.toast.success .toast-icon { background: var(--success-soft); color: var(--success); }
+.toast.error .toast-icon { background: var(--danger-soft); color: var(--danger); }
+.toast.info .toast-icon { background: var(--accent-soft); color: var(--accent); }
+.toast-title { font-size: 12px; font-weight: 620; }
+.toast-msg { font-size: 11px; color: var(--text-2); line-height: 1.5; margin-top: 3px; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalIn { from { opacity: 0; transform: translateY(12px) scale(.975); } to { opacity: 1; transform: none; } }
+@keyframes toastIn { from { opacity: 0; transform: translateX(18px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes toastOut { to { opacity: 0; transform: translateX(18px); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+<svg style="position:absolute;width:0;height:0" aria-hidden="true"><defs>
+  <symbol id="i-network" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="14" width="8" height="6" rx="1.5"/><rect x="14" y="14" width="7" height="6" rx="1.5"/><path d="M7 11v3M17.5 11v3M7 8h.01"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.5-4.5L3 9"/><path d="M3 4v5h5"/><path d="M4 13a8 8 0 0 0 14.5 4.5L21 15"/><path d="M21 20v-5h-5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 9v5M12 17.5h.01"/></symbol>
+  <symbol id="i-log" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></symbol>
+  <symbol id="i-config" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="8" cy="18" r="2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7.5 10.5 12 15l4.5-4.5M4 19h16"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="m14.5 7.5 3 3"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m6 15 4-5 3 3 5-7"/></symbol>
+</defs></svg>
+
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><svg class="icon"><use href="#i-network"/></svg></div>
+      <div><div class="brand-name">IP Switcher</div><div class="brand-sub">网络配置管理</div></div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-view="nics"><svg class="icon"><use href="#i-network"/></svg>网卡与方案<span class="nav-count" id="nicCount">0</span></button>
+      <button class="nav-item" data-view="locations"><svg class="icon"><use href="#i-globe"/></svg>网络位置<span class="nav-count" id="locCount">0</span></button>
+      <button class="nav-item" data-view="traffic"><svg class="icon"><use href="#i-chart"/></svg>流量监控<span class="nav-count" id="trafficCount">0</span></button>
+    </nav>
+    <div class="side-section">
+      <div class="side-label">当前网卡</div>
+      <div class="side-scroll" id="nicList"></div>
+    </div>
+    <div class="side-foot">
+      <div class="location-chip"><span class="dot on"></span>当前位置 · <strong id="locationName">—</strong></div>
+      <div class="side-actions">
+        <button class="side-link" data-act="openLog"><svg class="icon icon-sm"><use href="#i-log"/></svg>日志</button>
+        <button class="side-link" data-act="openConfig"><svg class="icon icon-sm"><use href="#i-config"/></svg>配置</button>
+        <button class="side-link" data-act="quit">退出</button>
+      </div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div><h1 id="pageTitle">网卡与方案</h1><p id="pageDesc">选择一张网卡，查看并切换它的 IP 配置方案</p></div>
+      <div class="top-actions">
+        <button class="btn btn-ghost" data-act="rollback"><svg class="icon icon-sm"><use href="#i-shield"/></svg>恢复快照</button>
+        <button class="btn btn-secondary" data-act="refresh"><svg class="icon icon-sm"><use href="#i-refresh"/></svg>刷新</button>
+      </div>
+    </div>
+    <div class="scroll" id="content"></div>
+  </main>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const icon = (id, cls = 'icon') => `<svg class="${cls}"><use href="#${id}"/></svg>`;
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ipRe = /^((25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(25[0-5]|2[0-4]\d|1?\d?\d)$/;
+
+let S = null, T = null, view = 'nics', selectedDevice = null, selectedLocation = null, modalMode = 'manual';
+const native = !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.ipsw);
+
+function fmtRate(v) {
+  v = Number(v) || 0;
+  if (v < 1) return '0 B/s';
+  if (v < 1024) return Math.round(v) + ' B/s';
+  if (v < 1048576) return (v / 1024).toFixed(1) + ' KB/s';
+  return (v / 1048576).toFixed(2) + ' MB/s';
+}
+function fmtBytes(v) {
+  v = Number(v) || 0;
+  if (v < 1024) return Math.round(v) + ' B';
+  if (v < 1048576) return (v / 1024).toFixed(1) + ' KB';
+  if (v < 1073741824) return (v / 1048576).toFixed(1) + ' MB';
+  return (v / 1073741824).toFixed(2) + ' GB';
+}
+
+// atob() 返回 Latin-1 字节串，直接 JSON.parse 会把 UTF-8 中文拆成乱码。
+// 先还原成字节数组再用 TextDecoder 按 UTF-8 解码。
+function b64json(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return JSON.parse(new TextDecoder('utf-8').decode(bytes));
+}
+window.__b64json = b64json;
+
+function post(action, data = {}) {
+  if (native) window.webkit.messageHandlers.ipsw.postMessage(Object.assign({ action }, data));
+  else { toast('info', '界面预览', '这是静态预览，实际操作请在 IP Switcher App 内完成。'); console.log('[demo]', action, data); }
+}
+
+function shortName(name) {
+  const p = String(name || '').split(' · ');
+  return p.length > 1 ? p.slice(1).join(' · ') : (p[0] || '未命名');
+}
+
+function toast(kind, title, msg) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind;
+  const sym = kind === 'success' ? 'i-check' : kind === 'error' ? 'i-alert' : 'i-shield';
+  el.innerHTML = `<div class="toast-icon">${icon(sym)}</div><div style="flex:1"><div class="toast-title">${esc(title)}</div><div class="toast-msg">${esc(msg)}</div></div>`;
+  $('#toasts').appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 220); }, 3600);
+}
+window.__ipswToast = (p) => toast(p.kind, p.title, p.message);
+
+function closeModal() { const o = $('#overlay'); o.classList.remove('show'); o.innerHTML = ''; }
+function showModal(html) {
+  const o = $('#overlay');
+  o.innerHTML = html;
+  o.classList.add('show');
+  o.onclick = (e) => { if (e.target === o) closeModal(); };
+  $$('[data-close]', o).forEach(b => b.onclick = closeModal);
+  const first = $('input[type=text]', o); if (first) setTimeout(() => first.focus(), 60);
+}
+
+function confirmModal(o) {
+  const danger = !!o.danger;
+  showModal(`<div class="modal">
+    <div class="modal-head">
+      <div class="modal-icon ${danger ? 'danger' : ''}">${icon(danger ? 'i-alert' : 'i-shield', 'icon icon-lg')}</div>
+      <div class="modal-head-txt"><div class="modal-title">${esc(o.title)}</div><div class="modal-desc">${esc(o.desc)}</div></div>
+      <button class="btn btn-icon modal-close" data-close>${icon('i-x','icon icon-sm')}</button>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" data-close>取消</button>
+      <button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" id="modalOk">${esc(o.confirm || '确认')}</button>
+    </div></div>`);
+  $('#modalOk').onclick = () => { closeModal(); o.onConfirm(); };
+}
+
+function renderSidebar() {
+  $('#nicCount').textContent = S.nics.length;
+  $('#locCount').textContent = S.locations.length;
+  $('#trafficCount').textContent = S.nics.length;
+  $('#locationName').textContent = S.location || '—';
+  $$('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  $('#nicList').innerHTML = S.nics.length ? S.nics.map(n => `
+    <button class="side-nic ${n.device === selectedDevice ? 'active' : ''}" data-nic="${esc(n.device)}">
+      <span class="dot ${n.liveIP && n.liveIP !== '未分配' && n.liveIP !== '未知' ? 'on' : ''}"></span>
+      <span class="side-nic-txt"><div class="side-nic-name">${esc(n.name)}</div>
+      <div class="side-nic-ip">${esc(n.device)} · ${esc(n.liveIP)}</div></span>
+    </button>`).join('') : `<div style="padding:10px;font-size:11px;color:var(--text-3)">未检测到网卡</div>`;
+}
+
+function statusLine() {
+  if (!S.message) return '';
+  return `<div class="status-line">${S.busy ? '<span class="spinner"></span>' : icon('i-check','icon icon-sm')}${esc(S.message)}</div>`;
+}
+
+function renderNICs() {
+  $('#pageTitle').textContent = '网卡与方案';
+  $('#pageDesc').textContent = '选择一张网卡，查看并切换它的 IP 配置方案';
+  const nic = S.nics.find(n => n.device === selectedDevice);
+  const plans = S.profiles.filter(p => p.device === selectedDevice);
+  if (!nic) {
+    $('#content').innerHTML = statusLine() + `<div class="empty">${icon('i-network','icon icon-lg')}
+      <h3>没有可用的网卡</h3><p>请检查网络连接，或点右上角刷新。</p>
+      <button class="btn btn-secondary" data-act="refresh">${icon('i-refresh','icon icon-sm')}重新检测</button></div>`;
+    return;
+  }
+  const currentBadge = nic.currentProfileName
+    ? `<span class="badge badge-accent">${icon('i-check','icon icon-sm')}当前 · ${esc(shortName(nic.currentProfileName))}</span>`
+    : `<span class="badge badge-warning">无匹配方案</span>`;
+  const cards = plans.length ? `<div class="grid">${plans.map((p, i) => `
+    <div class="card plan ${p.isCurrent ? 'current' : ''}" style="animation-delay:${i * 35}ms">
+      <div class="plan-top">
+        <span class="dot ${p.isCurrent ? 'on' : ''}"></span>
+        <span class="plan-name">${esc(shortName(p.name))}</span>
+        ${p.isCurrent ? '<span class="badge badge-success">生效中</span>' : ''}
+        ${!p.connected ? '<span class="badge badge-warning">未连接</span>' : ''}
+      </div>
+      <div class="plan-value ${p.mode !== 'manual' ? 'dim' : ''}">${esc(p.mode === 'manual' ? (p.ip || '静态 IP') : 'DHCP')}</div>
+      <div class="plan-detail">${esc(p.detail)}</div>
+      <div class="plan-foot">
+        <button class="btn ${p.isCurrent ? 'btn-secondary' : 'btn-primary'} btn-sm" data-act="apply" data-id="${esc(p.id)}" ${S.busy || !p.connected ? 'disabled' : ''}>
+          ${p.isCurrent ? '重新应用' : '应用此方案'}</button>
+        <button class="btn btn-icon edit" title="编辑方案" data-act="editPlan" data-id="${esc(p.id)}" ${S.busy ? 'disabled' : ''}>${icon('i-edit','icon icon-sm')}</button>
+        <button class="btn btn-icon" title="删除方案" data-act="deletePlan" data-id="${esc(p.id)}" ${S.busy ? 'disabled' : ''}>${icon('i-trash','icon icon-sm')}</button>
+      </div>
+    </div>`).join('')}</div>` : `<div class="empty">
+      <div class="empty-icon">${icon('i-plus','icon icon-lg')}</div>
+      <h3>这张网卡还没有方案</h3>
+      <p>新建一个固定 IP 方案，保存后就能随时一键切换。</p>
+      <button class="btn btn-primary" data-act="addPlan" ${S.busy ? 'disabled' : ''}>${icon('i-plus','icon icon-sm')}新增方案</button>
+    </div>`;
+  $('#content').innerHTML = statusLine() + `
+    <div class="card hero">
+      <div class="hero-icon">${icon('i-network')}</div>
+      <div class="hero-main">
+        <div class="hero-title">${esc(nic.name)} <span class="hero-device">${esc(nic.device)}</span></div>
+        <div class="hero-ip ${!nic.liveIP || nic.liveIP === '未分配' ? 'muted' : ''}">${esc(nic.liveIP)}</div>
+        <div class="hero-meta"><span class="badge">${esc(nic.mode === 'manual' ? '手动 IP' : 'DHCP')}</span>${currentBadge}
+          <span class="badge" id="heroDown">↓ —</span><span class="badge" id="heroUp">↑ —</span></div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn btn-secondary" data-act="dhcp" ${S.busy ? 'disabled' : ''}>恢复 DHCP</button>
+        <button class="btn btn-primary" data-act="addPlan" ${S.busy ? 'disabled' : ''}>${icon('i-plus','icon icon-sm')}新增方案</button>
+      </div>
+    </div>
+    <div class="section-head"><div class="section-title">预设方案<span>${plans.length} 套</span></div>
+      <div class="section-hint">点「应用此方案」后需输入管理员密码</div></div>
+    ${cards}`;
+}
+
+function renderLocations() {
+  $('#pageTitle').textContent = '网络位置';
+  $('#pageDesc').textContent = '管理 macOS 系统位置，查看每个位置包含的网络配置';
+  const loc = S.locations.find(l => l.name === selectedLocation) || S.locations[0];
+  const list = S.locations.length ? `<div class="loc-list">${S.locations.map((l, i) => `
+    <button class="card loc-item ${l.name === (loc && loc.name) ? 'active' : ''}" data-loc="${esc(l.name)}" style="animation-delay:${i * 35}ms">
+      <div class="loc-head"><span class="dot ${l.isCurrent ? 'on' : ''}"></span>
+        <span class="loc-name">${esc(l.name)}</span>
+        ${l.isCurrent ? '<span class="badge badge-success">当前</span>' : ''}</div>
+      <div class="loc-summary">${esc(l.summary)}</div>
+    </button>`).join('')}</div>` : `<div class="empty"><h3>没有位置</h3></div>`;
+  let detail = `<div class="card loc-detail"><div class="empty"><h3>选择一个位置</h3></div></div>`;
+  if (loc) {
+    detail = `<div class="card loc-detail">
+      <div class="loc-detail-head">
+        <div class="hero-icon">${icon('i-globe')}</div>
+        <div style="flex:1"><div class="loc-detail-title">${esc(loc.name)}</div>
+          <div class="loc-detail-sub">${loc.isCurrent ? '正在使用 · ' : ''}${esc(loc.summary)}</div></div>
+      </div>
+      ${loc.services.length ? loc.services.map(s => `<div class="svc-row">
+        <div class="svc-name">${esc(s.title)}</div><div class="svc-detail">${esc(s.detail)}</div></div>`).join('')
+        : `<div class="empty" style="padding:24px"><h3>这个位置没有网络服务</h3><p>可在系统设置中添加。</p></div>`}
+      <div class="loc-actions">
+        <button class="btn btn-primary" data-act="switchLoc" data-name="${esc(loc.name)}" ${S.busy || loc.isCurrent ? 'disabled' : ''}>${icon('i-arrow','icon icon-sm')}切换到此位置</button>
+        <button class="btn btn-secondary" data-act="importLoc" data-name="${esc(loc.name)}" ${S.busy || !loc.services.length ? 'disabled' : ''}>${icon('i-download','icon icon-sm')}导入为方案</button>
+        <button class="btn btn-ghost" data-act="deleteLoc" data-name="${esc(loc.name)}" ${S.busy || loc.isCurrent ? 'disabled' : ''}>${icon('i-trash','icon icon-sm')}删除位置</button>
+      </div>
+    </div>`;
+  }
+  $('#content').innerHTML = statusLine() + `
+    <div class="notice">${icon('i-alert','icon icon-sm')}<div><strong>位置是全局配置。</strong>切换会整体替换所有网卡的 IP、DNS、静态路由和代理，与「只改一张网卡」的方案不同；当前网络、SSH、VPN 可能短暂断开。切换前会自动保存快照。</div></div>
+    <div class="section-head"><div class="section-title">系统位置<span>${S.locations.length} 个</span></div>
+      <button class="btn btn-primary btn-sm" data-act="createLoc" ${S.busy ? 'disabled' : ''}>${icon('i-plus','icon icon-sm')}新建位置</button></div>
+    <div class="loc-layout">${list}${detail}</div>`;
+}
+
+function trafficRows() {
+  if (!S) return [];
+  return S.nics.map(n => ({
+    dev: n.device, nic: n,
+    item: (T && T.interfaces ? T.interfaces.find(x => x.device === n.device) : null) || null
+  }));
+}
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#3b6bf5';
+}
+function drawChart(canvas, down, up, offline) {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+  const c = canvas.getContext('2d');
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  c.clearRect(0, 0, w, h);
+  const accent = cssVar('--accent'), upColor = cssVar('--success'), grid = cssVar('--border');
+  const pad = 5;
+  const all = (down || []).concat(up || []);
+  const maxV = Math.max(2048, ...all) * 1.18;
+  const X = i => pad + (w - 2 * pad) * (i / Math.max(1, (down || []).length - 1));
+  const Y = v => h - pad - (h - 2 * pad) * (Math.min(v, maxV) / maxV);
+  c.strokeStyle = grid; c.lineWidth = 1; c.setLineDash([3, 4]);
+  for (let k = 1; k <= 3; k++) {
+    const y = pad + (h - 2 * pad) * k / 4;
+    c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke();
+  }
+  c.setLineDash([]);
+  if (offline) {
+    c.fillStyle = cssVar('--text-3'); c.font = '11px -apple-system, sans-serif';
+    c.textAlign = 'center'; c.fillText('接口未连接', w / 2, h / 2 + 4);
+    return;
+  }
+  if (!down || down.length < 2) {
+    c.fillStyle = cssVar('--text-3'); c.font = '11px -apple-system, sans-serif';
+    c.textAlign = 'center'; c.fillText('正在采集数据…', w / 2, h / 2 + 4);
+    return;
+  }
+  const grad = c.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, accent + '38'); grad.addColorStop(1, accent + '02');
+  c.beginPath(); c.moveTo(X(0), h - pad);
+  down.forEach((v, i) => c.lineTo(X(i), Y(v)));
+  c.lineTo(X(down.length - 1), h - pad); c.closePath();
+  c.fillStyle = grad; c.fill();
+  const line = (arr, color, width) => {
+    c.beginPath();
+    arr.forEach((v, i) => i ? c.lineTo(X(i), Y(v)) : c.moveTo(X(i), Y(v)));
+    c.strokeStyle = color; c.lineWidth = width;
+    c.lineJoin = 'round'; c.lineCap = 'round'; c.stroke();
+  };
+  line(down, accent, 1.8);
+  if (up && up.length) line(up, upColor, 1.5);
+  c.beginPath();
+  c.arc(X(down.length - 1), Y(down[down.length - 1]), 2.6, 0, Math.PI * 2);
+  c.fillStyle = accent; c.fill();
+}
+function drawAllTraffic() {
+  if (view !== 'traffic') return;
+  const rows = trafficRows();
+  $$('canvas.tc-chart').forEach(cv => {
+    const r = rows.find(x => x.dev === cv.dataset.dev);
+    if (r) drawChart(cv, r.item ? r.item.down : [], r.item ? r.item.up : [],
+                     r.item ? r.item.online === false : false);
+  });
+}
+function updateTrafficNumbers() {
+  if (!S) return;
+  const rows = trafficRows();
+  const sum = (key) => rows.reduce((a, r) => a + (r.item ? (r.item[key] || 0) : 0), 0);
+  const put = (key, dev, value) => {
+    const sel = dev ? `[data-t="${key}"][data-dev="${dev}"]` : `[data-t="${key}"]`;
+    const el = $(sel); if (el) el.textContent = value;
+  };
+  put('totalDown', null, fmtRate(sum('downNow')));
+  put('totalUp', null, fmtRate(sum('upNow')));
+  put('totalAll', null, fmtBytes(sum('totalIn') + sum('totalOut')));
+  put('updated', null, T ? `更新于 ${T.updatedAt} · 最近 ${T.sampleSeconds || 60} 秒` : '等待首次采样…');
+  rows.forEach(r => {
+    const it = r.item;
+    put('nowDown', r.dev, fmtRate(it ? it.downNow : 0));
+    put('nowUp', r.dev, fmtRate(it ? it.upNow : 0));
+    put('peakDown', r.dev, fmtRate(it ? it.peakDown : 0));
+    put('totalIn', r.dev, fmtBytes(it ? it.totalIn : 0));
+    put('totalOut', r.dev, fmtBytes(it ? it.totalOut : 0));
+  });
+  const hd = $('#heroDown'), hu = $('#heroUp');
+  if (hd && hu) {
+    const cur = rows.find(r => r.dev === selectedDevice);
+    const it = cur ? cur.item : null;
+    hd.textContent = '↓ ' + fmtRate(it ? it.downNow : 0);
+    hu.textContent = '↑ ' + fmtRate(it ? it.upNow : 0);
+  }
+}
+function renderTraffic() {
+  $('#pageTitle').textContent = '流量监控';
+  $('#pageDesc').textContent = '每秒采样一次，展示各网卡最近 60 秒的下行与上行速率';
+  const rows = trafficRows();
+  $('#content').innerHTML = `
+    <div class="card traffic-overview">
+      <div class="to-stat"><span>当前总下行</span><strong data-t="totalDown">—</strong></div>
+      <div class="to-stat"><span>当前总上行</span><strong data-t="totalUp">—</strong></div>
+      <div class="to-stat"><span>本次会话累计</span><strong data-t="totalAll">—</strong></div>
+    </div>
+    <div class="section-head">
+      <div class="section-title">网卡实时流量<span>${rows.length} 张</span></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>下行</span>
+        <span><i style="background:var(--success)"></i>上行</span>
+        <span data-t="updated" style="margin-left:8px">等待首次采样…</span></div>
+    </div>
+    <div class="traffic-grid">${rows.map((r, i) => `
+      <div class="card traffic-card" style="animation-delay:${i * 40}ms">
+        <div class="tc-head"><span class="dot ${r.item && r.item.online !== false && r.nic.liveIP && r.nic.liveIP !== '未分配' ? 'on' : ''}"></span>
+          <span class="tc-name">${esc(r.nic.name)}</span>
+          ${r.item && r.item.online === false ? '<span class="badge badge-warning">未连接</span>' : ''}
+          <span class="badge">${esc(r.dev)}</span></div>
+        <div class="tc-rates">
+          <div class="tc-rate"><span class="tc-arrow down">↓</span><strong data-t="nowDown" data-dev="${esc(r.dev)}">—</strong><small>下行</small></div>
+          <div class="tc-rate"><span class="tc-arrow up">↑</span><strong data-t="nowUp" data-dev="${esc(r.dev)}">—</strong><small>上行</small></div>
+        </div>
+        <canvas class="tc-chart" data-dev="${esc(r.dev)}"></canvas>
+        <div class="tc-foot">
+          <span>下行峰值 <b data-t="peakDown" data-dev="${esc(r.dev)}">—</b></span>
+          <span>累计收 <b data-t="totalIn" data-dev="${esc(r.dev)}">—</b> · 发 <b data-t="totalOut" data-dev="${esc(r.dev)}">—</b></span>
+        </div>
+      </div>`).join('')}</div>
+    <div class="hint" style="margin-top:14px">数据来自系统接口字节计数器，不经过网络、不需要管理员权限。标记「未连接」的网卡在系统偏好里有配置、但当前内核中没有对应接口（例如 USB 网卡没插上），插上后会自动开始计数。累计值从应用启动算起，重启归零；32 位计数器回绕已做兼容。</div>`;
+}
+window.__ipswTraffic = (p) => { T = p; updateTrafficNumbers(); drawAllTraffic(); };
+
+function render() {
+  if (!S) return;
+  if (!S.nics.some(n => n.device === selectedDevice)) {
+    const preferred = S.nics.find(n => n.currentProfileID && n.liveIP !== '未分配') || S.nics[0];
+    selectedDevice = preferred ? preferred.device : null;
+  }
+  if (!S.locations.some(l => l.name === selectedLocation)) {
+    const cur = S.locations.find(l => l.isCurrent) || S.locations[0];
+    selectedLocation = cur ? cur.name : null;
+  }
+  renderSidebar();
+  if (view === 'nics') renderNICs();
+  else if (view === 'locations') renderLocations();
+  else renderTraffic();
+  updateTrafficNumbers();
+  drawAllTraffic();
+}
+window.__ipswRender = (p) => { S = p; render(); };
+window.__ipswSetView = (v) => { view = v; render(); };
+
+document.addEventListener('click', (e) => {
+  const nav = e.target.closest('[data-view]');
+  if (nav) { view = nav.dataset.view; render(); return; }
+  const nic = e.target.closest('[data-nic]');
+  if (nic) { selectedDevice = nic.dataset.nic; render(); return; }
+  const loc = e.target.closest('[data-loc]');
+  if (loc) { selectedLocation = loc.dataset.loc; render(); return; }
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const act = t.dataset.act, id = t.dataset.id, name = t.dataset.name;
+  switch (act) {
+    case 'refresh': post('refresh'); break;
+    case 'rollback':
+      confirmModal({ title: '恢复上次切换前的配置？',
+        desc: '会用最近一次保存的快照恢复当时改动过的网卡与字段，需要管理员密码。',
+        confirm: '恢复快照', onConfirm: () => post('rollback') });
+      break;
+    case 'openLog': post('openLog'); break;
+    case 'openConfig': post('openConfig'); break;
+    case 'quit': post('quit'); break;
+    case 'apply': {
+      const p = S.profiles.find(x => x.id === id); if (!p) return;
+      confirmModal({ title: '切换到「' + shortName(p.name) + '」？',
+        desc: `将修改 ${p.nic} (${p.device})：${p.detail}\n需要管理员密码；命令失败会在同一次授权内自动回滚。`,
+        confirm: '应用方案', onConfirm: () => post('apply', { id }) });
+      break;
+    }
+    case 'dhcp': {
+      const n = S.nics.find(x => x.device === selectedDevice); if (!n) return;
+      confirmModal({ title: '恢复为 DHCP 自动获取？',
+        desc: `只把 ${n.name} (${n.device}) 的 IPv4 改回自动获取；DNS、代理、静态路由和其它网卡保持不变。`,
+        confirm: '恢复 DHCP', onConfirm: () => post('dhcp', { device: n.device, nic: n.name }) });
+      break;
+    }
+    case 'deletePlan': {
+      const p = S.profiles.find(x => x.id === id); if (!p) return;
+      confirmModal({ title: '删除方案「' + shortName(p.name) + '」？', danger: true,
+        desc: '只从 profiles.json 移除这条方案，不会改动当前网络配置。删除前会自动备份配置文件。',
+        confirm: '删除方案', onConfirm: () => post('deleteProfile', { id }) });
+      break;
+    }
+    case 'editPlan': {
+      const p = S.profiles.find(x => x.id === id); if (!p) return;
+      planModal(p); break;
+    }
+    case 'addPlan': planModal(null); break;
+    case 'switchLoc':
+      confirmModal({ title: '切换到系统位置「' + name + '」？', danger: true,
+        desc: '这会整体替换所有网卡的 IP、DNS、静态路由和代理设置。当前网络、SSH、VPN 可能短暂断开。切换前会自动保存快照。',
+        confirm: '切换位置', onConfirm: () => post('switchLocation', { name }) });
+      break;
+    case 'deleteLoc':
+      confirmModal({ title: '删除系统位置「' + name + '」？', danger: true,
+        desc: '会从 macOS 系统网络配置中永久删除该位置，此操作不可撤销。当前正在使用的位置不能删除。',
+        confirm: '删除位置', onConfirm: () => post('deleteLocation', { name }) });
+      break;
+    case 'importLoc':
+      confirmModal({ title: '把位置「' + name + '」导入为方案？',
+        desc: '会按网卡拆成若干套方案，只保留 IPv4 与 DNS；静态路由、代理、IPv6 不带入。导入前会备份 profiles.json。',
+        confirm: '导入', onConfirm: () => post('importLocation', { name }) });
+      break;
+    case 'createLoc': createLocModal(); break;
+    case 'segment': modalMode = t.dataset.mode; updatePlanForm(); break;
+    case 'submitPlan': submitPlan(t.dataset.apply === '1'); break;
+    case 'submitLoc': submitLoc(); break;
+  }
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+// 窗口拖动：WKWebView 盖住了原生标题栏，在顶栏、侧栏品牌区或弹窗标题
+// 按住左键时通知 Swift 调 performDrag；按钮/输入框等交互元素除外。
+document.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  if (e.target.closest('button, input, select, a, canvas')) return;
+  if (e.target.closest('.topbar') || e.target.closest('.brand') || e.target.closest('.modal-head')) {
+    post('dragWindow');
+  }
+});
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'fName' || e.target.id === 'fIP') checkNameIP();
+});
+
+let editing = null;
+function planModal(edit) {
+  editing = edit || null;
+  modalMode = editing ? (editing.mode || 'manual') : 'manual';
+  const n = S.nics.find(x => x.device === selectedDevice) || S.nics[0];
+  if (!n && !editing) return;
+  const isEdit = !!editing;
+  const nic = isEdit ? editing.nic : n.name;
+  const device = isEdit ? editing.device : n.device;
+  const nameVal = isEdit ? editing.name : (nic + ' · 新方案');
+  const ipVal = isEdit ? (editing.ip || '') : (n.liveIP && ipRe.test(n.liveIP) ? n.liveIP : '');
+  const maskVal = isEdit ? (editing.mask || '255.255.255.0') : '255.255.255.0';
+  const routerVal = isEdit ? (editing.router || '') : '';
+  const dnsVal = isEdit ? (editing.dns || []).join(', ') : '';
+  showModal(`<div class="modal">
+    <div class="modal-head">
+      <div class="modal-icon">${icon(isEdit ? 'i-edit' : 'i-plus','icon icon-lg')}</div>
+      <div class="modal-head-txt"><div class="modal-title">${isEdit ? '编辑方案' : '新增 IP 方案'}</div>
+        <div class="modal-desc">${isEdit
+          ? `修改 ${esc(nic)} (${esc(device)}) 的方案，ID 保持不变；保存后可在列表中直接应用。`
+          : `为 ${esc(nic)} (${esc(device)}) 保存一套可复用的配置。`}</div></div>
+      <button class="btn btn-icon modal-close" data-close>${icon('i-x','icon icon-sm')}</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>方案名称</label><input type="text" id="fName" placeholder="例如 机房调试 · 10.111.191.1" value="${esc(nameVal)}"></div>
+      <div class="field"><label>获取方式</label>
+        <div class="segmented">
+          <button data-act="segment" data-mode="manual" class="${modalMode === 'manual' ? 'on' : ''}">静态 IP</button>
+          <button data-act="segment" data-mode="dhcp" class="${modalMode === 'dhcp' ? 'on' : ''}">DHCP 自动获取</button>
+        </div>
+      </div>
+      <div id="manualFields">
+        <div class="field"><label>IP 地址</label><input type="text" id="fIP" placeholder="例如 10.111.191.1" value="${esc(ipVal)}"></div>
+        <div class="hint hint-warn" id="nameMismatch" style="display:none;margin:-6px 0 12px"></div>
+        <div class="field-row">
+          <div class="field"><label>子网掩码</label><input type="text" id="fMask" value="${esc(maskVal)}"></div>
+          <div class="field"><label>网关（可留空）</label><input type="text" id="fRouter" placeholder="例如 10.111.191.254" value="${esc(routerVal)}"></div>
+        </div>
+        <div class="field"><label>DNS（可留空，多个用逗号分隔）</label><input type="text" id="fDNS" placeholder="例如 223.5.5.5, 114.114.114.114" value="${esc(dnsVal)}"></div>
+      </div>
+      <div class="hint">网关留空时，系统可能保留原来的网关；DNS 留空表示不下发 DNS 命令。</div>
+      <div class="error" id="formError"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" data-close>取消</button>
+      <button class="btn btn-secondary" data-act="submitPlan" data-apply="0">${isEdit ? '保存修改' : '仅保存'}</button>
+      <button class="btn btn-primary" data-act="submitPlan" data-apply="1">${isEdit ? '保存并应用' : '保存并使用'}</button>
+    </div></div>`);
+  updatePlanForm();
+  checkNameIP();
+}
+function updatePlanForm() {
+  $$('.segmented button').forEach(b => b.classList.toggle('on', b.dataset.mode === modalMode));
+  $('#manualFields').style.display = modalMode === 'manual' ? '' : 'none';
+  $('#formError').classList.remove('show');
+  checkNameIP();
+}
+function checkNameIP() {
+  const hint = $('#nameMismatch');
+  if (!hint) return;
+  const fName = $('#fName'), fIP = $('#fIP');
+  const named = fName && fName.value.match(ipRe) ? fName.value.match(ipRe)[0] : '';
+  const ip = fIP ? fIP.value.trim() : '';
+  if (modalMode === 'manual' && named && ip && named !== ip) {
+    hint.textContent = `名称里写的是 ${named}，IP 地址栏是 ${ip}，保存后容易混淆。`;
+    hint.style.display = '';
+  } else { hint.style.display = 'none'; }
+}
+function submitPlan(applyNow) {
+  const name = $('#fName').value.trim();
+  const n = S.nics.find(x => x.device === selectedDevice) || S.nics[0];
+  const target = editing ? { device: editing.device, nic: editing.nic }
+                         : { device: n.device, nic: n.name };
+  const err = (m) => { const e = $('#formError'); e.textContent = m; e.classList.add('show'); };
+  if (!name) return err('请填写方案名称。');
+  let ip = '', mask = '', router = '', dns = [];
+  if (modalMode === 'manual') {
+    ip = $('#fIP').value.trim(); mask = $('#fMask').value.trim(); router = $('#fRouter').value.trim();
+    dns = $('#fDNS').value.split(/[,，\s]+/).filter(Boolean);
+    if (!ipRe.test(ip)) return err('IP 地址格式不正确：' + ip);
+    if (!ipRe.test(mask)) return err('子网掩码格式不正确：' + mask);
+    if (router && !ipRe.test(router)) return err('网关格式不正确：' + router);
+    for (const d of dns) if (!ipRe.test(d)) return err('DNS 格式不正确：' + d);
+  }
+  const payload = { name, device: target.device, nic: target.nic, mode: modalMode,
+                    ip, mask, router, dns, applyNow: !!applyNow };
+  if (editing) payload.editId = editing.id;
+  closeModal();
+  post('saveProfile', payload);
+}
+function createLocModal() {
+  showModal(`<div class="modal">
+    <div class="modal-head">
+      <div class="modal-icon">${icon('i-globe','icon icon-lg')}</div>
+      <div class="modal-head-txt"><div class="modal-title">新建系统位置</div>
+        <div class="modal-desc">创建后不会自动切换过去，可稍后在列表中选用。</div></div>
+      <button class="btn btn-icon modal-close" data-close>${icon('i-x','icon icon-sm')}</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>位置名称</label><input type="text" id="lName" placeholder="例如 机房调试"></div>
+      <label class="check-row"><input type="checkbox" id="lPopulate" checked><span>带出默认网络服务（populate）<br><span class="hint" style="margin-top:3px">用系统当前网卡初始化新位置；不勾选则创建空位置。</span></span></label>
+      <div class="error" id="locError"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" data-close>取消</button>
+      <button class="btn btn-primary" data-act="submitLoc">创建位置</button>
+    </div></div>`);
+}
+function submitLoc() {
+  const name = $('#lName').value.trim();
+  if (!name) { const e = $('#locError'); e.textContent = '请填写位置名称。'; e.classList.add('show'); return; }
+  const populate = $('#lPopulate').checked;
+  closeModal();
+  post('createLocation', { name, populate });
+}
+
+const DEMO = {
+  location: '个人', activeProfileID: 'plan-en6-10-111-191-1', busy: false,
+  message: '就绪 · 所有数据来自本机真实配置',
+  nics: [
+    { device:'en0', name:'Wi-Fi', mode:'dhcp', liveIP:'192.168.66.5', dns:['223.5.5.5'], currentProfileID:'preset-en0-dhcp', currentProfileName:'Wi-Fi · DHCP 自动获取 · DNS 223.5.5.5' },
+    { device:'en7', name:'USB 10/100 LAN', mode:'manual', liveIP:'192.168.1.88', dns:['223.6.6.6'], currentProfileID:'preset-en7-192-168-1-88', currentProfileName:'USB 10/100 LAN · 192.168.1.88 · DNS 223.6.6.6' },
+    { device:'en6', name:'AX88179A', mode:'manual', liveIP:'10.111.191.1', dns:[], currentProfileID:'plan-en6-10-111-191-1', currentProfileName:'AX88179A · 10.111.191.1' },
+    { device:'en8', name:'iPhone USB', mode:'dhcp', liveIP:'未分配', dns:[], currentProfileID:'preset-en8-dhcp', currentProfileName:'iPhone USB · DHCP 自动获取' }
+  ],
+  profiles: [
+    { id:'preset-en0-dhcp', name:'Wi-Fi · DHCP 自动获取 · DNS 223.5.5.5', nic:'Wi-Fi', device:'en0', mode:'dhcp', ip:'', mask:'', router:'', dns:['223.5.5.5'], detail:'DHCP 自动获取 · DNS 223.5.5.5', isCurrent:true, connected:true },
+    { id:'preset-en7-dhcp', name:'USB 10/100 LAN · DHCP 自动获取', nic:'USB 10/100 LAN', device:'en7', mode:'dhcp', ip:'', mask:'', router:'', dns:[], detail:'DHCP 自动获取', isCurrent:false, connected:true },
+    { id:'preset-en7-192-168-1-88', name:'USB 10/100 LAN · 192.168.1.88 · DNS 223.6.6.6', nic:'USB 10/100 LAN', device:'en7', mode:'manual', ip:'192.168.1.88', mask:'255.255.255.0', router:'', dns:['223.6.6.6'], detail:'静态 192.168.1.88 / 255.255.255.0 · DNS 223.6.6.6', isCurrent:true, connected:true },
+    { id:'preset-en6-dhcp', name:'AX88179A · DHCP 自动获取', nic:'AX88179A', device:'en6', mode:'dhcp', ip:'', mask:'', router:'', dns:[], detail:'DHCP 自动获取', isCurrent:false, connected:true },
+    { id:'preset-en6-172-26-11-1', name:'AX88179A · 172.26.11.1', nic:'AX88179A', device:'en6', mode:'manual', ip:'172.26.11.1', mask:'255.255.255.0', router:'172.26.11.1', dns:[], detail:'静态 172.26.11.1 / 255.255.255.0 · 网关 172.26.11.1', isCurrent:false, connected:true },
+    { id:'preset-en8-dhcp', name:'iPhone USB · DHCP 自动获取', nic:'iPhone USB', device:'en8', mode:'dhcp', ip:'', mask:'', router:'', dns:[], detail:'DHCP 自动获取', isCurrent:true, connected:true },
+    { id:'plan-en6-10-111-191-1', name:'AX88179A · 10.111.191.1', nic:'AX88179A', device:'en6', mode:'manual', ip:'10.111.191.1', mask:'255.255.255.0', router:'', dns:[], detail:'静态 10.111.191.1 / 255.255.255.0', isCurrent:true, connected:true }
+  ],
+  locations: [
+    { name:'个人', isCurrent:true, summary:'5 项服务 · 2 个静态 IP · 11 条静态路由 · 代理开启', services:[
+      { title:'Wi-Fi (en0)', detail:'DHCP 自动获取 · DNS 223.5.5.5 · 代理开启' },
+      { title:'USB 10/100 LAN (en7)', detail:'静态 192.168.1.88 / 255.255.255.0 · DNS 223.6.6.6 · 5 条静态路由 · 代理开启' },
+      { title:'AX88179A (en6)', detail:'静态 10.111.191.1 / 255.255.255.0 · 网关 172.26.11.1 · 6 条静态路由 · 代理开启' },
+      { title:'iPhone USB (en8)', detail:'DHCP 自动获取 · 代理开启' } ] },
+    { name:'大唐中南院', isCurrent:false, summary:'3 项服务 · 0 个静态 IP', services:[
+      { title:'以太网适配器(en4) (en4)', detail:'DHCP 自动获取' },
+      { title:'雷雳网桥 (bridge0)', detail:'DHCP 自动获取' },
+      { title:'Wi-Fi (en0)', detail:'DHCP 自动获取' } ] },
+    { name:'甘肃集控', isCurrent:false, summary:'4 项服务 · 0 个静态 IP', services:[
+      { title:'以太网转换器(en3) (en3)', detail:'DHCP 自动获取' },
+      { title:'以太网转换器(en4) (en4)', detail:'DHCP 自动获取' },
+      { title:'雷雳网桥 (bridge0)', detail:'DHCP 自动获取' },
+      { title:'Wi-Fi (en0)', detail:'DHCP 自动获取 · DNS 223.5.5.5' } ] }
+  ]
+};
+function demoInterface(dev, base, amp, seed) {
+  const down = [], up = [];
+  for (let i = 0; i < 60; i++) {
+    const t = i / 6;
+    const wave = 0.62 + Math.sin(t + seed) * 0.3 + Math.sin(t * 2.3 + seed * 2) * 0.15;
+    down.push(Math.max(0, base * wave + (Math.random() - 0.5) * amp));
+    up.push(Math.max(0, base * 0.22 * (0.7 + Math.sin(t * 1.4 + seed) * 0.35) + Math.random() * amp * 0.08));
+  }
+  return { device: dev, down, up, online: true,
+    downNow: down[down.length - 1], upNow: up[up.length - 1],
+    totalIn: base * 137, totalOut: base * 31,
+    peakDown: Math.max(...down), peakUp: Math.max(...up) };
+}
+const DEMO_TRAFFIC = {
+  updatedAt: new Date().toTimeString().slice(0, 8), elapsed: 137, sampleSeconds: 60,
+  interfaces: [
+    demoInterface('en0', 320000, 90000, 1.2),
+    demoInterface('en7', 85000, 22000, 2.6),
+    demoInterface('en6', 42000, 14000, 0.4),
+    demoInterface('en8', 2600, 1200, 3.1)
+  ]
+};
+
+if (!native) {
+  setTimeout(() => { window.__ipswRender(DEMO); }, 60);
+  const dt = DEMO_TRAFFIC;
+  setTimeout(() => window.__ipswTraffic(dt), 220);
+  setInterval(() => {
+    dt.interfaces.forEach(it => {
+      const last = it.down[it.down.length - 1] || 1000;
+      const base = it.peakDown || 1000;
+      const nv = Math.max(0, last * 0.55 + Math.random() * base * 0.9);
+      const uv = Math.max(0, (it.up[it.up.length - 1] || 0) * 0.5 + Math.random() * base * 0.2);
+      it.down.push(nv); it.down.shift();
+      it.up.push(uv); it.up.shift();
+      it.downNow = nv; it.upNow = uv;
+      it.totalIn += nv; it.totalOut += uv;
+      it.peakDown = Math.max(it.peakDown, nv); it.peakUp = Math.max(it.peakUp, uv);
+    });
+    dt.updatedAt = new Date().toTimeString().slice(0, 8);
+    dt.elapsed += 1;
+    window.__ipswTraffic(dt);
+  }, 1000);
+}
+else { window.webkit.messageHandlers.ipsw.postMessage({ action: 'ready' }); }
+</script>
+</body>
+</html>

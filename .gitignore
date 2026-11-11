@@ -1,0 +1,16 @@
+# Xcode / SwiftPM 构建产物
+.build/
+*.xcodeproj
+*.xcuserdata
+
+# 本地构建的 App 包
+*.app
+
+# 本机生成的个人配置（含真实内网 IP，切勿提交）
+profiles.json
+
+# 开发辅助
+.workbuddy/
+.DS_Store
+*.swp
+*~
