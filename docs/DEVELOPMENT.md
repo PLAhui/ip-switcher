@@ -126,6 +126,7 @@ Sources/
 
 ## 开发注意事项
 
+0. **免密切换的实现**：`PasswordlessSwitch`（Core）管理 `/etc/sudoers.d/ipswitcher`（内容仅一行，NOPASSWD 限定 `/usr/sbin/networksetup`）。`PrivilegedExecutor.run(apply:)` 每次先用 `sudo -n -l` 探测：命中规则则走 `runPlain`（脚本内逐条 `sudo -n networksetup`，无对话框）；未命中则走 osascript 授权对话框。开启/关闭规则的脚本写入前都经 `visudo -cf` 校验。沙箱化的终端里 `sudo` 会被拦截（exit 127），探测逻辑要在真实环境验证。
 1. **不要在开发时对生产网卡执行 `apply`**。需要验证下发链路时，优先 `preview` / `script` 审查命令，或使用一块未使用的 USB 网卡。
 2. **改动 `profiles.json` 前先备份**：
 

@@ -9,6 +9,18 @@ public struct ApplyReport {
     public let neutralized: [String]
     public let rolledBack: Bool
 
+    public init(succeeded: Bool, title: String, message: String,
+                commandCount: Int, skipped: [String], neutralized: [String],
+                rolledBack: Bool) {
+        self.succeeded = succeeded
+        self.title = title
+        self.message = message
+        self.commandCount = commandCount
+        self.skipped = skipped
+        self.neutralized = neutralized
+        self.rolledBack = rolledBack
+    }
+
     public var fullMessage: String {
         var parts = [message]
         if !skipped.isEmpty {

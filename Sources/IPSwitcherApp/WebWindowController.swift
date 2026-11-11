@@ -251,6 +251,7 @@ final class WebWindowController: NSWindowController, NSWindowDelegate,
         return ["location": NetworkSetup.currentLocation(),
                 "activeProfileID": store.activeProfileID ?? "",
                 "busy": busy, "message": message,
+                "passwordless": PasswordlessSwitch.isEnabled(),
                 "nics": nicRows, "profiles": profileRows,
                 "locations": locationRows]
     }
@@ -291,6 +292,12 @@ final class WebWindowController: NSWindowController, NSWindowDelegate,
 
         case "rollback":
             runCore("正在恢复上次快照… 请输密码") { Applier.rollback() }
+
+        case "enablePasswordless":
+            togglePasswordless(enable: true)
+
+        case "disablePasswordless":
+            togglePasswordless(enable: false)
 
         case "apply":
             guard let id = body["id"] as? String,
@@ -465,6 +472,33 @@ final class WebWindowController: NSWindowController, NSWindowDelegate,
                       old == nil ? "可在该网卡的方案列表中选用。"
                                  : "方案 ID 保持不变，配置文件已自动备份。")
             pushState()
+        }
+    }
+
+    /// 开启 / 关闭免密切换。写入或删除 sudoers 规则各需一次管理员授权（最后一次输密码）。
+    private func togglePasswordless(enable: Bool) {
+        let alreadyOn = PasswordlessSwitch.isEnabled()
+        if enable && alreadyOn {
+            sendToast("info", "免密切换已处于开启状态", "无需重复操作。")
+            return
+        }
+        if !enable && !alreadyOn {
+            sendToast("info", "免密切换本就未开启", "当前每次操作仍会要求密码。")
+            return
+        }
+        runCore(enable ? "正在开启免密切换… 请在授权框中输入密码"
+                       : "正在关闭免密切换… 请在授权框中输入密码") {
+            let script = enable ? PasswordlessSwitch.enableScript()
+                                : PasswordlessSwitch.disableScript()
+            let result: PrivilegedResult
+            do {
+                result = try PrivilegedExecutor.run(script: script)
+            } catch {
+                return ApplyReport(succeeded: false, title: "操作失败",
+                                   message: "无法调用系统授权对话框：\(error.localizedDescription)",
+                                   commandCount: 0, skipped: [], neutralized: [], rolledBack: false)
+            }
+            return PasswordlessSwitch.report(for: result, enabling: enable)
         }
     }
 

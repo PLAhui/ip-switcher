@@ -91,18 +91,19 @@ public enum NetworkSetup {
     }
 
     public static func shellScript(apply commands: [[String]],
-                                   rollback: [[String]] = []) -> String {
+                                   rollback: [[String]] = [],
+                                   sudoPrefix: Bool = false) -> String {
         var lines: [String] = ["#!/bin/bash", "fail=0",
                                "PATH=/usr/sbin:/usr/bin:/bin:/sbin"]
         for (index, command) in commands.enumerated() {
-            lines.append(scriptLine(command, index: index + 1))
+            lines.append(scriptLine(command, index: index + 1, sudoPrefix: sudoPrefix))
         }
         if !rollback.isEmpty {
             lines.append("if [ $fail -gt 0 ]; then")
             lines.append("  echo \"IPSW_ROLLBACK_START\" >&2")
             lines.append("  fail=0")
             for (index, command) in rollback.enumerated() {
-                lines.append("  " + scriptLine(command, index: index + 1))
+                lines.append("  " + scriptLine(command, index: index + 1, sudoPrefix: sudoPrefix))
             }
             lines.append("  echo \"IPSWITCHER_ROLLED_BACK failures=$fail\"")
             lines.append("  exit 1")
@@ -114,8 +115,9 @@ public enum NetworkSetup {
     }
 
     private static func scriptLine(_ command: [[String]].Element,
-                                   index: Int) -> String {
-        let invocation = "/usr/sbin/networksetup " +
+                                   index: Int,
+                                   sudoPrefix: Bool = false) -> String {
+        let invocation = (sudoPrefix ? "sudo -n " : "") + "/usr/sbin/networksetup " +
             command.map(shellQuote).joined(separator: " ")
         return "if ! \(invocation); then echo \"IPSW_FAILED_LINE=\(index)\" >&2; " +
                "fail=$((fail+1)); fi"

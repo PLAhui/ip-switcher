@@ -155,6 +155,7 @@ svg { display: block; }
 .btn-secondary { background: var(--surface); border-color: var(--border-strong); color: var(--text); box-shadow: var(--shadow-sm); }
 .btn-secondary:not(:disabled):hover { background: var(--surface-2); border-color: var(--text-3); }
 .btn-ghost { color: var(--text-2); }
+.btn.pw-on { color: var(--success); border-color: var(--success); background: var(--success-soft); }
 .btn-ghost:not(:disabled):hover { background: var(--surface-2); color: var(--text); }
 .btn-danger { background: var(--danger); color: #fff; }
 .btn-danger:not(:disabled):hover { filter: brightness(.93); }
@@ -405,6 +406,7 @@ svg { display: block; }
     <div class="topbar">
       <div><h1 id="pageTitle">网卡与方案</h1><p id="pageDesc">选择一张网卡，查看并切换它的 IP 配置方案</p></div>
       <div class="top-actions">
+        <button class="btn btn-ghost" id="pwlessBtn" data-act="togglePasswordless"><svg class="icon icon-sm"><use href="#i-shield"/></svg><span id="pwlessText">免密切换</span></button>
         <button class="btn btn-ghost" data-act="rollback"><svg class="icon icon-sm"><use href="#i-shield"/></svg>恢复快照</button>
         <button class="btn btn-secondary" data-act="refresh"><svg class="icon icon-sm"><use href="#i-refresh"/></svg>刷新</button>
       </div>
@@ -748,6 +750,12 @@ function render() {
     selectedLocation = cur ? cur.name : null;
   }
   renderSidebar();
+  const pwBtn = document.getElementById('pwlessBtn');
+  if (pwBtn) {
+    const on = !!S.passwordless;
+    pwBtn.classList.toggle('pw-on', on);
+    document.getElementById('pwlessText').textContent = on ? '免密切换 · 开' : '免密切换';
+  }
   if (view === 'nics') renderNICs();
   else if (view === 'locations') renderLocations();
   else renderTraffic();
@@ -769,6 +777,19 @@ document.addEventListener('click', (e) => {
   const act = t.dataset.act, id = t.dataset.id, name = t.dataset.name;
   switch (act) {
     case 'refresh': post('refresh'); break;
+    case 'togglePasswordless': {
+      if (!S) return;
+      if (S.passwordless) {
+        confirmModal({ title: '关闭免密切换？',
+          desc: '将删除 /etc/sudoers.d/ipswitcher 规则文件（需输最后一次密码），恢复为每次操作都要求管理员密码。',
+          confirm: '关闭免密', onConfirm: () => post('disablePasswordless') });
+      } else {
+        confirmModal({ title: '开启免密切换？',
+          desc: '将向 /etc/sudoers.d/ipswitcher 写入一条规则：管理员免密执行 networksetup（该命令只能修改 IP/DNS 等网络配置，不能访问文件）。\n\n开启时输最后一次密码；之后切换方案、恢复 DHCP、切换位置都不再弹窗。\n注意：规则对本机所有程序生效，其他程序同样可以免密修改网络配置。',
+          confirm: '开启免密', onConfirm: () => post('enablePasswordless') });
+      }
+      break;
+    }
     case 'rollback':
       confirmModal({ title: '恢复上次切换前的配置？',
         desc: '会用最近一次保存的快照恢复当时改动过的网卡与字段，需要管理员密码。',
